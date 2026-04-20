@@ -1,6 +1,8 @@
 package fr.vferries.cuisine.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -10,11 +12,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.clickable
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -41,6 +44,12 @@ import fr.vferries.cuisine.data.formatQty
 import fr.vferries.cuisine.data.formatUnit
 import fr.vferries.cuisine.data.pluralizeName
 import fr.vferries.cuisine.data.scaleQuantityText
+
+private enum class RecipeTab(val label: String) {
+    INGREDIENTS("Ingrédients"),
+    STEPS("Étapes"),
+    COOKWARE("Ustensiles"),
+}
 
 @Composable
 fun RecipeScreen(state: RecipeState) {
@@ -69,13 +78,16 @@ private fun SuccessContent(recipe: Recipe) {
     val store = remember { ChecklistStore.from(context) }
     var checked by remember { mutableStateOf(emptySet<String>()) }
     LaunchedEffect(recipe.slug) { checked = store.get(recipe.slug) }
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        if (hasImage) {
-            item {
+
+    var tab by rememberSaveable(recipe.slug) { mutableStateOf(RecipeTab.INGREDIENTS) }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Bloc toujours visible : image, titre, portions.
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (hasImage) {
                 AsyncImage(
                     model = Urls.heroUrl(recipe.slug),
                     contentDescription = title,
@@ -86,9 +98,7 @@ private fun SuccessContent(recipe: Recipe) {
                         .clip(RoundedCornerShape(14.dp)),
                 )
             }
-        }
-        item { Text(text = title, style = MaterialTheme.typography.headlineMedium) }
-        item {
+            Text(text = title, style = MaterialTheme.typography.headlineMedium)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -102,59 +112,88 @@ private fun SuccessContent(recipe: Recipe) {
                 OutlinedButton(onClick = { currentServings++ }) { Text("+") }
             }
         }
-        if (recipe.ingredients.isNotEmpty()) {
-            item {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Ingrédients",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.weight(1f),
-                    )
-                    if (checked.isNotEmpty()) {
-                        TextButton(onClick = {
-                            checked = emptySet()
-                            store.set(recipe.slug, emptySet())
-                        }) { Text("Tout décocher") }
-                    }
-                }
+
+        TabRow(selectedTabIndex = tab.ordinal) {
+            RecipeTab.entries.forEach { t ->
+                Tab(
+                    selected = tab == t,
+                    onClick = { tab = t },
+                    text = { Text(t.label) },
+                )
             }
-            items(recipe.ingredients, key = { it.name }) { ing ->
-                val isChecked = ing.name in checked
-                val scaled = scaleQuantityText(ing.quantity, ratio)
-                val qty = formatQty(scaled, ing.unit)
-                val deco = if (isChecked) TextDecoration.LineThrough else TextDecoration.None
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            val next = if (isChecked) checked - ing.name else checked + ing.name
-                            checked = next
-                            store.set(recipe.slug, next)
-                        },
-                ) {
-                    Checkbox(checked = isChecked, onCheckedChange = null)
-                    Text(
-                        text = ing.name,
-                        modifier = Modifier.weight(1f),
-                        textDecoration = deco,
-                    )
-                    Text(text = qty ?: "au goût", textDecoration = deco)
-                }
-            }
-            item { HorizontalDivider() }
         }
-        if (recipe.cookware.isNotEmpty()) {
-            item { Text(text = "Ustensiles", style = MaterialTheme.typography.titleMedium) }
-            item {
-                val line = recipe.cookware.joinToString(", ") { c ->
-                    val q = c.quantity.toIntOrNull() ?: 1
-                    if (q > 1) "$q ${pluralizeName(q, c.name)}" else c.name
-                }
-                Text(text = line)
-            }
-            item { HorizontalDivider() }
+
+        when (tab) {
+            RecipeTab.INGREDIENTS -> IngredientsTab(
+                recipe = recipe,
+                checked = checked,
+                ratio = ratio,
+                onToggle = { name ->
+                    val next = if (name in checked) checked - name else checked + name
+                    checked = next
+                    store.set(recipe.slug, next)
+                },
+                onClearAll = {
+                    checked = emptySet()
+                    store.set(recipe.slug, emptySet())
+                },
+            )
+            RecipeTab.STEPS -> StepsTab(recipe = recipe)
+            RecipeTab.COOKWARE -> CookwareTab(recipe = recipe)
         }
+    }
+}
+
+@Composable
+private fun IngredientsTab(
+    recipe: Recipe,
+    checked: Set<String>,
+    ratio: Double,
+    onToggle: (String) -> Unit,
+    onClearAll: () -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        if (checked.isNotEmpty()) {
+            item {
+                Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                    TextButton(onClick = onClearAll) { Text("Tout décocher") }
+                }
+            }
+        }
+        items(recipe.ingredients, key = { it.name }) { ing ->
+            val isChecked = ing.name in checked
+            val scaled = scaleQuantityText(ing.quantity, ratio)
+            val qty = formatQty(scaled, ing.unit)
+            val deco = if (isChecked) TextDecoration.LineThrough else TextDecoration.None
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onToggle(ing.name) },
+            ) {
+                Checkbox(checked = isChecked, onCheckedChange = null)
+                Text(
+                    text = ing.name,
+                    modifier = Modifier.weight(1f),
+                    textDecoration = deco,
+                )
+                Text(text = qty ?: "au goût", textDecoration = deco)
+            }
+        }
+    }
+}
+
+@Composable
+private fun StepsTab(recipe: Recipe) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
         recipe.sections.forEach { section ->
             item { Text(text = section.name, style = MaterialTheme.typography.titleMedium) }
             items(section.steps) { step ->
@@ -165,6 +204,26 @@ private fun SuccessContent(recipe: Recipe) {
             item { HorizontalDivider() }
             item { Text(text = "Astuces", style = MaterialTheme.typography.titleMedium) }
             items(recipe.tips) { Text(text = it) }
+        }
+    }
+}
+
+@Composable
+private fun CookwareTab(recipe: Recipe) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        if (recipe.cookware.isEmpty()) {
+            Text(text = "Aucun ustensile listé.")
+        } else {
+            val line = recipe.cookware.joinToString(", ") { c ->
+                val q = c.quantity.toIntOrNull() ?: 1
+                if (q > 1) "$q ${pluralizeName(q, c.name)}" else c.name
+            }
+            Text(text = line)
         }
     }
 }
