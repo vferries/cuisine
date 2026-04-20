@@ -54,7 +54,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import fr.vferries.cuisine.data.Recipe
 import fr.vferries.cuisine.data.StepToken
@@ -86,10 +88,23 @@ fun RecipeScreen(
         topBar = {
             TopAppBar(
                 title = {
+                    val base = MaterialTheme.typography.titleMedium
+                    val style = when {
+                        title.length > 40 -> base.copy(
+                            fontSize = 14.sp,
+                            lineHeight = 17.sp,
+                        )
+                        title.length > 26 -> base.copy(
+                            fontSize = 16.sp,
+                            lineHeight = 19.sp,
+                        )
+                        else -> base
+                    }
                     Text(
                         text = title,
-                        maxLines = 1,
-                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        style = style,
                     )
                 },
                 navigationIcon = {
