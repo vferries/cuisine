@@ -22,6 +22,9 @@ import coil.compose.AsyncImage
 import fr.vferries.cuisine.data.Recipe
 import fr.vferries.cuisine.data.StepToken
 import fr.vferries.cuisine.data.Urls
+import fr.vferries.cuisine.data.formatQty
+import fr.vferries.cuisine.data.formatUnit
+import fr.vferries.cuisine.data.pluralizeName
 
 @Composable
 fun RecipeScreen(state: RecipeState) {
@@ -64,14 +67,22 @@ private fun SuccessContent(recipe: Recipe) {
         if (recipe.ingredients.isNotEmpty()) {
             item { Text(text = "Ingrédients", style = MaterialTheme.typography.titleMedium) }
             items(recipe.ingredients, key = { it.name }) { ing ->
-                val qty = listOfNotNull(
-                    ing.quantity.takeIf { it.isNotBlank() },
-                    ing.unit?.takeIf { it.isNotBlank() },
-                ).joinToString(" ")
+                val qty = formatQty(ing.quantity, ing.unit)
                 Row {
                     Text(text = ing.name, modifier = Modifier.weight(1f))
-                    if (qty.isNotEmpty()) Text(text = qty)
+                    Text(text = qty ?: "au goût")
                 }
+            }
+            item { HorizontalDivider() }
+        }
+        if (recipe.cookware.isNotEmpty()) {
+            item { Text(text = "Ustensiles", style = MaterialTheme.typography.titleMedium) }
+            item {
+                val line = recipe.cookware.joinToString(", ") { c ->
+                    val q = c.quantity.toIntOrNull() ?: 1
+                    if (q > 1) "$q ${pluralizeName(q, c.name)}" else c.name
+                }
+                Text(text = line)
             }
             item { HorizontalDivider() }
         }
@@ -97,7 +108,8 @@ private fun fr.vferries.cuisine.data.Step.renderText(): String =
             is StepToken.CookwareToken -> token.cookware.name
             is StepToken.TimerToken -> buildString {
                 append(token.timer.quantity)
-                if (token.timer.unit.isNotBlank()) append(' ').append(token.timer.unit)
+                val u = formatUnit(token.timer.quantity, token.timer.unit)
+                if (u.isNotEmpty()) append(' ').append(u)
             }
         }
     }
