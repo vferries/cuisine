@@ -59,7 +59,11 @@ fun CuissonScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onExit) {
-                        Text("←", fontSize = 24.sp)
+                        Text(
+                            text = "←",
+                            fontSize = 24.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
                     }
                 },
             )

@@ -22,21 +22,20 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -73,57 +72,50 @@ private enum class RecipeTab(val label: String) {
     COOKWARE("Ustensiles"),
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeScreen(
     state: RecipeState,
     onStartCuisson: () -> Unit = {},
     onBack: () -> Unit = {},
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {},
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Text("←", fontSize = 24.sp)
-                    }
-                },
-                actions = {
-                    if (state is RecipeState.Success) {
-                        Button(
-                            onClick = onStartCuisson,
-                            modifier = Modifier.padding(end = 8.dp),
-                        ) { Text("Mode cuisson") }
-                    }
-                },
-            )
-        },
-    ) { padding ->
+    Box(modifier = Modifier.fillMaxSize()) {
         when (state) {
             RecipeState.Loading -> Text(
                 text = "Chargement…",
-                modifier = Modifier
-                    .padding(padding)
-                    .padding(16.dp),
+                modifier = Modifier.safeDrawingPadding().padding(16.dp),
             )
             is RecipeState.Error -> Text(
                 text = "Erreur : ${state.message}",
-                modifier = Modifier
-                    .padding(padding)
-                    .padding(16.dp),
+                modifier = Modifier.safeDrawingPadding().padding(16.dp),
             )
-            is RecipeState.Success -> SuccessContent(
-                recipe = state.recipe,
-                contentPadding = padding,
-            )
+            is RecipeState.Success -> SuccessContent(recipe = state.recipe)
+        }
+        // Boutons flottants en overlay pour ne pas consommer d'espace en haut.
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .safeDrawingPadding()
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+        ) {
+            FilledTonalIconButton(onClick = onBack) {
+                Text(
+                    text = "←",
+                    fontSize = 24.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            Spacer(Modifier.weight(1f))
+            if (state is RecipeState.Success) {
+                FilledTonalButton(onClick = onStartCuisson) { Text("Mode cuisson") }
+            }
         }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun SuccessContent(recipe: Recipe, contentPadding: PaddingValues) {
+private fun SuccessContent(recipe: Recipe) {
     val title = recipe.metadata["title"].orEmpty()
     val hasImage = recipe.metadata["image"]?.isNotBlank() == true
     val originalServings = recipe.metadata["servings"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
@@ -146,9 +138,7 @@ private fun SuccessContent(recipe: Recipe, contentPadding: PaddingValues) {
 
     LazyColumn(
         state = listState,
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPadding),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 32.dp),
     ) {
         if (hasImage) {
@@ -348,18 +338,33 @@ private fun LazyListScope.stepsItems(recipe: Recipe, slug: String) {
         }
     }
     if (recipe.tips.isNotEmpty()) {
-        item(key = "tips-divider") {
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        }
-        item(key = "tips-title") {
-            Text(
-                text = "Astuces",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-        }
-        items(recipe.tips, key = { "tip-$it".hashCode() }) {
-            Text(text = it, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+        item(key = "tips-card") {
+            Surface(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Text(
+                        text = "ASTUCES",
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                    recipe.tips.forEachIndexed { i, tip ->
+                        if (i > 0) {
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f),
+                            )
+                        }
+                        Text(text = tip, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
         }
     }
 }

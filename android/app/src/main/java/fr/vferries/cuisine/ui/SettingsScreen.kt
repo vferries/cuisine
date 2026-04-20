@@ -33,7 +33,11 @@ fun SettingsScreen(
                 title = { Text("Réglages") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Text("←", fontSize = 24.sp)
+                        Text(
+                            text = "←",
+                            fontSize = 24.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
                     }
                 },
             )

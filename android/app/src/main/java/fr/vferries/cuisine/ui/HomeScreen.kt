@@ -61,7 +61,11 @@ fun HomeScreen(
                 title = { Text("Cuisine") },
                 actions = {
                     IconButton(onClick = onSettingsClick) {
-                        Text("⚙", fontSize = 22.sp)
+                        Text(
+                            text = "⚙",
+                            fontSize = 22.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
                     }
                 },
             )
