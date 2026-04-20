@@ -1,6 +1,7 @@
 package fr.vferries.cuisine.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -12,7 +13,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -28,8 +31,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import fr.vferries.cuisine.data.ChipKey
 import fr.vferries.cuisine.data.RecipeMeta
 import fr.vferries.cuisine.data.Urls
+import fr.vferries.cuisine.data.filterByChip
 import fr.vferries.cuisine.data.matchingRecipeSlugs
 
 sealed interface HomeState {
@@ -59,9 +64,11 @@ fun HomeScreen(
 @Composable
 private fun SuccessList(recipes: List<RecipeMeta>, onRecipeClick: (String) -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }
-    val filtered = remember(recipes, query) {
-        val matching = matchingRecipeSlugs(recipes, query).toSet()
-        recipes.filter { it.slug in matching }
+    var chip by rememberSaveable { mutableStateOf(ChipKey.ALL) }
+    val filtered = remember(recipes, query, chip) {
+        val bySearch = matchingRecipeSlugs(recipes, query).toSet()
+        val byChip = filterByChip(recipes, chip).toSet()
+        recipes.filter { it.slug in bySearch && it.slug in byChip }
     }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -76,6 +83,20 @@ private fun SuccessList(recipes: List<RecipeMeta>, onRecipeClick: (String) -> Un
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
+        }
+        item {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+            ) {
+                ChipKey.entries.forEach { key ->
+                    FilterChip(
+                        selected = chip == key,
+                        onClick = { chip = key },
+                        label = { Text(key.label) },
+                    )
+                }
+            }
         }
         if (filtered.isEmpty()) {
             item {
