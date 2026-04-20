@@ -1,32 +1,40 @@
 package fr.vferries.cuisine.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -77,6 +85,7 @@ fun RecipeScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SuccessContent(recipe: Recipe, onStartCuisson: () -> Unit) {
     val title = recipe.metadata["title"].orEmpty()
@@ -92,57 +101,76 @@ private fun SuccessContent(recipe: Recipe, onStartCuisson: () -> Unit) {
 
     var tab by rememberSaveable(recipe.slug) { mutableStateOf(RecipeTab.INGREDIENTS) }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Bloc toujours visible : image, titre, portions.
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            if (hasImage) {
+    val listState = rememberLazyListState()
+    // Le hero (item 0) est considéré comme "scrollé hors vue" dès que la liste
+    // ne commence plus à l'item 0.
+    val heroScrolled by remember {
+        derivedStateOf { hasImage && listState.firstVisibleItemIndex > 0 }
+    }
+
+    LazyColumn(
+        state = listState,
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        if (hasImage) {
+            item(key = "hero") {
                 AsyncImage(
                     model = Urls.heroUrl(recipe.slug),
                     contentDescription = title,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(4f / 3f)
-                        .clip(RoundedCornerShape(14.dp)),
+                        .aspectRatio(4f / 3f),
                 )
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.weight(1f),
-                )
-                Button(onClick = onStartCuisson) { Text("Mode cuisson") }
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+        }
+        item(key = "header") {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Text(text = "Portions", modifier = Modifier.weight(1f))
-                OutlinedButton(
-                    onClick = { if (currentServings > 1) currentServings-- },
-                    enabled = currentServings > 1,
-                ) { Text("−") }
-                Text(text = currentServings.toString())
-                OutlinedButton(onClick = { currentServings++ }) { Text("+") }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.headlineMedium,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Button(onClick = onStartCuisson) { Text("Mode cuisson") }
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(text = "Portions", modifier = Modifier.weight(1f))
+                    OutlinedButton(
+                        onClick = { if (currentServings > 1) currentServings-- },
+                        enabled = currentServings > 1,
+                    ) { Text("−") }
+                    Text(text = currentServings.toString())
+                    OutlinedButton(onClick = { currentServings++ }) { Text("+") }
+                }
             }
         }
-
-        TabRow(selectedTabIndex = tab.ordinal) {
-            RecipeTab.entries.forEach { t ->
-                Tab(
-                    selected = tab == t,
-                    onClick = { tab = t },
-                    text = { Text(t.label) },
-                )
+        stickyHeader(key = "tabs") {
+            Surface(tonalElevation = 2.dp) {
+                Column {
+                    AnimatedVisibility(visible = heroScrolled) {
+                        CompactHero(recipe = recipe, hasImage = hasImage, title = title)
+                    }
+                    TabRow(selectedTabIndex = tab.ordinal) {
+                        RecipeTab.entries.forEach { t ->
+                            Tab(
+                                selected = tab == t,
+                                onClick = { tab = t },
+                                text = { Text(t.label) },
+                            )
+                        }
+                    }
+                }
             }
         }
-
         when (tab) {
-            RecipeTab.INGREDIENTS -> IngredientsTab(
+            RecipeTab.INGREDIENTS -> ingredientsItems(
                 recipe = recipe,
                 checked = checked,
                 ratio = ratio,
@@ -156,71 +184,97 @@ private fun SuccessContent(recipe: Recipe, onStartCuisson: () -> Unit) {
                     store.set(recipe.slug, emptySet())
                 },
             )
-            RecipeTab.STEPS -> StepsTab(recipe = recipe, slug = recipe.slug)
-            RecipeTab.COOKWARE -> CookwareTab(recipe = recipe)
+            RecipeTab.STEPS -> stepsItems(recipe = recipe, slug = recipe.slug)
+            RecipeTab.COOKWARE -> cookwareItems(recipe = recipe)
         }
     }
 }
 
 @Composable
-private fun IngredientsTab(
+private fun CompactHero(recipe: Recipe, hasImage: Boolean, title: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+    ) {
+        if (hasImage) {
+            AsyncImage(
+                model = Urls.thumbUrl(recipe.slug),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+            )
+            Spacer(Modifier.width(12.dp))
+        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+private fun LazyListScope.ingredientsItems(
     recipe: Recipe,
     checked: Set<String>,
     ratio: Double,
     onToggle: (String) -> Unit,
     onClearAll: () -> Unit,
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        if (checked.isNotEmpty()) {
-            item {
-                Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                    TextButton(onClick = onClearAll) { Text("Tout décocher") }
-                }
-            }
-        }
-        items(recipe.ingredients, key = { it.name }) { ing ->
-            val isChecked = ing.name in checked
-            val scaled = scaleQuantityText(ing.quantity, ratio)
-            val qty = formatQty(scaled, ing.unit)
-            val deco = if (isChecked) TextDecoration.LineThrough else TextDecoration.None
+    if (checked.isNotEmpty()) {
+        item(key = "clear") {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onToggle(ing.name) },
+                    .padding(horizontal = 16.dp),
             ) {
-                Checkbox(checked = isChecked, onCheckedChange = null)
-                Text(
-                    text = ing.name,
-                    modifier = Modifier.weight(1f),
-                    textDecoration = deco,
-                )
-                Text(text = qty ?: "au goût", textDecoration = deco)
+                TextButton(onClick = onClearAll) { Text("Tout décocher") }
             }
+        }
+    }
+    items(recipe.ingredients, key = { "ing-${it.name}" }) { ing ->
+        val isChecked = ing.name in checked
+        val scaled = scaleQuantityText(ing.quantity, ratio)
+        val qty = formatQty(scaled, ing.unit)
+        val deco = if (isChecked) TextDecoration.LineThrough else TextDecoration.None
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onToggle(ing.name) }
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+        ) {
+            Checkbox(checked = isChecked, onCheckedChange = null)
+            Text(
+                text = ing.name,
+                modifier = Modifier.weight(1f),
+                textDecoration = deco,
+            )
+            Text(text = qty ?: "au goût", textDecoration = deco)
         }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun StepsTab(recipe: Recipe, slug: String) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        recipe.sections.forEachIndexed { sectionIdx, section ->
-            item(key = "section-$sectionIdx") {
-                Text(text = section.name, style = MaterialTheme.typography.titleMedium)
-            }
-            itemsIndexed(section.steps) { stepIdx, step ->
+private fun LazyListScope.stepsItems(recipe: Recipe, slug: String) {
+    recipe.sections.forEachIndexed { sectionIdx, section ->
+        item(key = "section-$sectionIdx") {
+            Text(
+                text = section.name,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        }
+        section.steps.forEachIndexed { stepIdx, step ->
+            item(key = "step-$sectionIdx-$stepIdx") {
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                 ) {
                     step.tokens.forEachIndexed { tokIdx, token ->
                         when (token) {
@@ -255,44 +309,37 @@ private fun StepsTab(recipe: Recipe, slug: String) {
                 }
             }
         }
-        if (recipe.tips.isNotEmpty()) {
-            item { HorizontalDivider() }
-            item { Text(text = "Astuces", style = MaterialTheme.typography.titleMedium) }
-            items(recipe.tips) { Text(text = it) }
+    }
+    if (recipe.tips.isNotEmpty()) {
+        item(key = "tips-divider") {
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        }
+        item(key = "tips-title") {
+            Text(
+                text = "Astuces",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
+        items(recipe.tips, key = { "tip-$it".hashCode() }) {
+            Text(text = it, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
         }
     }
 }
 
-@Composable
-private fun CookwareTab(recipe: Recipe) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
+private fun LazyListScope.cookwareItems(recipe: Recipe) {
+    item(key = "cookware") {
         if (recipe.cookware.isEmpty()) {
-            Text(text = "Aucun ustensile listé.")
+            Text(
+                text = "Aucun ustensile listé.",
+                modifier = Modifier.padding(16.dp),
+            )
         } else {
             val line = recipe.cookware.joinToString(", ") { c ->
                 val q = c.quantity.toIntOrNull() ?: 1
                 if (q > 1) "$q ${pluralizeName(q, c.name)}" else c.name
             }
-            Text(text = line)
+            Text(text = line, modifier = Modifier.padding(16.dp))
         }
     }
 }
-
-private fun fr.vferries.cuisine.data.Step.renderText(): String =
-    tokens.joinToString("") { token ->
-        when (token) {
-            is StepToken.Text -> token.text
-            is StepToken.IngredientToken -> token.ingredient.name
-            is StepToken.CookwareToken -> token.cookware.name
-            is StepToken.TimerToken -> buildString {
-                append(token.timer.quantity)
-                val u = formatUnit(token.timer.quantity, token.timer.unit)
-                if (u.isNotEmpty()) append(' ').append(u)
-            }
-        }
-    }
