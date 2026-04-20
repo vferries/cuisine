@@ -5,6 +5,7 @@
   "description": "Recettes en Cooklang — site web + app Android",
   "scripts": {
     "build-index": "pnpm --filter @cuisine/tooling build-index",
+    "validate": "pnpm --filter @cuisine/tooling validate",
     "dev": "pnpm build-index && pnpm --filter @cuisine/web dev",
     "build": "pnpm build-index && pnpm --filter @cuisine/web build",
     "preview": "pnpm --filter @cuisine/web preview",

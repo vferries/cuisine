@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build-index": "tsx src/build-index.ts",
+    "validate": "tsx src/validate-cook.ts",
     "test": "vitest run"
   },
   "devDependencies": {

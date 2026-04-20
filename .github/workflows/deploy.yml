@@ -30,6 +30,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Validate .cook files
+        run: pnpm validate
+
       - name: Unit tests
         run: pnpm test
 
