@@ -1,19 +1,24 @@
 package fr.vferries.cuisine.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.collectAsState
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import fr.vferries.cuisine.data.RecipeRepository
+import fr.vferries.cuisine.ui.theme.ThemeMode
 
 @Composable
-fun CuisineNavHost(repository: RecipeRepository) {
+fun CuisineNavHost(
+    repository: RecipeRepository,
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
+) {
     val nav = rememberNavController()
     NavHost(navController = nav, startDestination = "home") {
         composable("home") {
@@ -21,9 +26,18 @@ fun CuisineNavHost(repository: RecipeRepository) {
                 factory = factoryOf { HomeViewModel(repository) },
             )
             val state by vm.state.collectAsState()
-            HomeScreen(state = state, onRecipeClick = { slug ->
-                nav.navigate("recipe/$slug")
-            })
+            HomeScreen(
+                state = state,
+                onRecipeClick = { slug -> nav.navigate("recipe/$slug") },
+                onSettingsClick = { nav.navigate("settings") },
+            )
+        }
+        composable("settings") {
+            SettingsScreen(
+                mode = themeMode,
+                onModeChange = onThemeModeChange,
+                onBack = { nav.popBackStack() },
+            )
         }
         composable(
             route = "recipe/{slug}",

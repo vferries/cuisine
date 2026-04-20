@@ -15,10 +15,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,26 +47,51 @@ sealed interface HomeState {
     data class Error(val message: String) : HomeState
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     state: HomeState,
     onRecipeClick: (String) -> Unit = {},
+    onSettingsClick: () -> Unit = {},
 ) {
-    when (state) {
-        HomeState.Loading -> Text(text = "Chargement…", modifier = Modifier.padding(16.dp))
-        is HomeState.Error -> Text(
-            text = "Erreur : ${state.message}",
-            modifier = Modifier.padding(16.dp),
-        )
-        is HomeState.Success -> SuccessList(
-            recipes = state.recipes,
-            onRecipeClick = onRecipeClick,
-        )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Cuisine") },
+                actions = {
+                    TextButton(onClick = onSettingsClick) { Text("⚙") }
+                },
+            )
+        },
+    ) { padding ->
+        when (state) {
+            HomeState.Loading -> Text(
+                text = "Chargement…",
+                modifier = Modifier
+                    .padding(padding)
+                    .padding(16.dp),
+            )
+            is HomeState.Error -> Text(
+                text = "Erreur : ${state.message}",
+                modifier = Modifier
+                    .padding(padding)
+                    .padding(16.dp),
+            )
+            is HomeState.Success -> SuccessList(
+                recipes = state.recipes,
+                contentPadding = padding,
+                onRecipeClick = onRecipeClick,
+            )
+        }
     }
 }
 
 @Composable
-private fun SuccessList(recipes: List<RecipeMeta>, onRecipeClick: (String) -> Unit) {
+private fun SuccessList(
+    recipes: List<RecipeMeta>,
+    contentPadding: PaddingValues,
+    onRecipeClick: (String) -> Unit,
+) {
     var query by rememberSaveable { mutableStateOf("") }
     var chip by rememberSaveable { mutableStateOf(ChipKey.ALL) }
     val filtered = remember(recipes, query, chip) {
@@ -71,7 +100,9 @@ private fun SuccessList(recipes: List<RecipeMeta>, onRecipeClick: (String) -> Un
         recipes.filter { it.slug in bySearch && it.slug in byChip }
     }
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(contentPadding),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
