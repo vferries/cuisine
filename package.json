@@ -9,7 +9,7 @@
     "build": "pnpm build-index && pnpm --filter @cuisine/web build",
     "preview": "pnpm --filter @cuisine/web preview",
     "test": "pnpm -r --if-present test",
-    "test:e2e": "pnpm --filter @cuisine/web test:e2e"
+    "test:e2e": "pnpm build-index && pnpm --filter @cuisine/web test:e2e"
   },
   "engines": {
     "node": ">=20",
