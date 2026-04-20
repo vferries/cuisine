@@ -782,6 +782,17 @@ input {
 .timer-item.is-expired {
   background: var(--accent-tint);
   color: var(--accent-deep);
+  animation: timer-blink 0.9s ease-in-out infinite;
+}
+@keyframes timer-blink {
+  0%, 100% {
+    background: var(--accent-tint);
+    color: var(--accent-deep);
+  }
+  50% {
+    background: var(--accent);
+    color: var(--paper);
+  }
 }
 .timer-name {
   flex: 1;

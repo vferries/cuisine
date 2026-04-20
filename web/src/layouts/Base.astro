@@ -69,6 +69,15 @@ const { title, description = "Mes recettes en Cooklang" } = Astro.props;
       const tray = document.querySelector<HTMLElement>(".timer-tray");
       const list = tray?.querySelector<HTMLElement>(".timer-list");
 
+      const beep = new Audio(
+        import.meta.env.BASE_URL + "audio/timer-beep.mp3",
+      );
+      const notified = new Set<string>();
+      // Ne pas sonner pour les timers déjà expirés au chargement (session précédente).
+      readTimers().forEach((t) => {
+        if (isExpired(t, Date.now())) notified.add(t.id);
+      });
+
       function render() {
         if (!tray || !list) return;
         const timers = readTimers();
@@ -79,6 +88,14 @@ const { title, description = "Mes recettes en Cooklang" } = Astro.props;
         }
         tray.hidden = false;
         const now = Date.now();
+        // Détecter les transitions running → expired pour notifier une fois.
+        timers.forEach((t) => {
+          if (isExpired(t, now) && !notified.has(t.id)) {
+            notified.add(t.id);
+            beep.currentTime = 0;
+            beep.play().catch(() => {});
+          }
+        });
         list.replaceChildren(
           ...timers.map((t) => {
             const li = document.createElement("li");
@@ -99,6 +116,7 @@ const { title, description = "Mes recettes en Cooklang" } = Astro.props;
             dismiss.textContent = "✕";
             dismiss.addEventListener("click", () => {
               writeTimers(removeTimer(readTimers(), t.id));
+              notified.delete(t.id);
               render();
             });
             li.append(name, rem, dismiss);
