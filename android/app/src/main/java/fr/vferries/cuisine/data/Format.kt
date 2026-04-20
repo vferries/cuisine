@@ -29,6 +29,19 @@ fun formatQty(qty: String, unit: String?): String? {
 }
 
 /**
+ * Scale une qty texte : multiplie par [ratio] si parseable en nombre, renvoie
+ * telle quelle sinon (ex. "au goût" → "au goût"). Les entiers restent entiers,
+ * sinon arrondi à 2 décimales.
+ */
+fun scaleQuantityText(qty: String, ratio: Double): String {
+    val n = qty.toDoubleOrNull() ?: return qty
+    val scaled = n * ratio
+    val rounded = Math.round(scaled * 100).toDouble() / 100.0
+    return if (rounded == rounded.toLong().toDouble()) rounded.toLong().toString()
+    else rounded.toString()
+}
+
+/**
  * Pluralise le premier mot d'un nom si qty > 1 ; laisse invariant si le mot
  * termine déjà par s/x/z. Supporte les noms composés ("planche à découper"
  * → "planches à découper").

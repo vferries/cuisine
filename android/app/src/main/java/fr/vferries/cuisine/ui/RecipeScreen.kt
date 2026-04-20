@@ -12,8 +12,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -25,6 +31,7 @@ import fr.vferries.cuisine.data.Urls
 import fr.vferries.cuisine.data.formatQty
 import fr.vferries.cuisine.data.formatUnit
 import fr.vferries.cuisine.data.pluralizeName
+import fr.vferries.cuisine.data.scaleQuantityText
 
 @Composable
 fun RecipeScreen(state: RecipeState) {
@@ -45,6 +52,9 @@ fun RecipeScreen(state: RecipeState) {
 private fun SuccessContent(recipe: Recipe) {
     val title = recipe.metadata["title"].orEmpty()
     val hasImage = recipe.metadata["image"]?.isNotBlank() == true
+    val originalServings = recipe.metadata["servings"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
+    var currentServings by rememberSaveable(recipe.slug) { mutableIntStateOf(originalServings) }
+    val ratio = currentServings.toDouble() / originalServings
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -64,10 +74,25 @@ private fun SuccessContent(recipe: Recipe) {
             }
         }
         item { Text(text = title, style = MaterialTheme.typography.headlineMedium) }
+        item {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(text = "Portions", modifier = Modifier.weight(1f))
+                OutlinedButton(
+                    onClick = { if (currentServings > 1) currentServings-- },
+                    enabled = currentServings > 1,
+                ) { Text("−") }
+                Text(text = currentServings.toString())
+                OutlinedButton(onClick = { currentServings++ }) { Text("+") }
+            }
+        }
         if (recipe.ingredients.isNotEmpty()) {
             item { Text(text = "Ingrédients", style = MaterialTheme.typography.titleMedium) }
             items(recipe.ingredients, key = { it.name }) { ing ->
-                val qty = formatQty(ing.quantity, ing.unit)
+                val scaled = scaleQuantityText(ing.quantity, ratio)
+                val qty = formatQty(scaled, ing.unit)
                 Row {
                     Text(text = ing.name, modifier = Modifier.weight(1f))
                     Text(text = qty ?: "au goût")

@@ -51,6 +51,20 @@ class FormatTest {
         assertEquals("6 c. à c.", formatQty("6", "càc"))
     }
 
+    @Test fun scaleQuantityText_preserves_integer_results() {
+        assertEquals("9", scaleQuantityText("6", 1.5))
+        assertEquals("1", scaleQuantityText("2", 0.5))
+    }
+
+    @Test fun scaleQuantityText_keeps_decimals_when_needed() {
+        assertEquals("1.5", scaleQuantityText("1", 1.5))
+    }
+
+    @Test fun scaleQuantityText_leaves_non_numeric_untouched() {
+        assertEquals("quelques", scaleQuantityText("quelques", 2.0))
+        assertEquals("", scaleQuantityText("", 2.0))
+    }
+
     @Test fun pluralizeName_keeps_name_when_qty_le_1() {
         assertEquals("poêle", pluralizeName(1, "poêle"))
     }
