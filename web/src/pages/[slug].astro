@@ -84,7 +84,13 @@ const totalTime =
       </a>
     </header>
 
-    <div class="layout">
+    <nav class="tabs" role="tablist" aria-label="Sections de la recette">
+      <button role="tab" type="button" aria-selected="true" data-panel="ingredients">Ingrédients</button>
+      <button role="tab" type="button" aria-selected="false" data-panel="steps">Étapes</button>
+      <button role="tab" type="button" aria-selected="false" data-panel="cookware">Ustensiles</button>
+    </nav>
+
+    <div class="layout" data-active-panel="ingredients">
       <aside class="sidebar">
         <div class="hero-thumb">
           {meta.image ? (
@@ -111,40 +117,42 @@ const totalTime =
           </div>
         </div>
 
-        <p class="section-label">Ingrédients</p>
-        <ul class="ingredient-list">
-          {recipe.ingredients.map((ing: any) => {
-            const hasNumericQty = typeof ing.quantity === "number";
-            const qty = formatQty(ing.quantity, ing.unit);
-            return (
-              <li>
-                <div class="check" aria-hidden="true"></div>
-                <span class="name">{ing.name}</span>
-                {qty ? (
-                  <span
-                    class="qty"
-                    data-qty={hasNumericQty ? ing.quantity : undefined}
-                    data-unit={hasNumericQty ? ing.unit : undefined}
-                  >
-                    {qty}
-                  </span>
-                ) : (
-                  <span class="qty is-muted">au goût</span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        <div class="panel" data-panel="ingredients">
+          <p class="section-label">Ingrédients</p>
+          <ul class="ingredient-list">
+            {recipe.ingredients.map((ing: any) => {
+              const hasNumericQty = typeof ing.quantity === "number";
+              const qty = formatQty(ing.quantity, ing.unit);
+              return (
+                <li>
+                  <div class="check" aria-hidden="true"></div>
+                  <span class="name">{ing.name}</span>
+                  {qty ? (
+                    <span
+                      class="qty"
+                      data-qty={hasNumericQty ? ing.quantity : undefined}
+                      data-unit={hasNumericQty ? ing.unit : undefined}
+                    >
+                      {qty}
+                    </span>
+                  ) : (
+                    <span class="qty is-muted">au goût</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
 
         {cookwareSummary && (
-          <>
+          <div class="panel" data-panel="cookware">
             <p class="section-label">Ustensiles</p>
             <p class="cookware-list">{cookwareSummary}</p>
-          </>
+          </div>
         )}
       </aside>
 
-      <section>
+      <section class="panel" data-panel="steps">
         {sectionsWithNumbers.map((section: any) => (
           <div>
             <h2 class="section-heading">{section.name}</h2>
@@ -223,5 +231,19 @@ const totalTime =
       current -= 1;
       render();
     }
+  });
+
+  const tabs = document.querySelectorAll<HTMLButtonElement>(
+    '.tabs [role="tab"]',
+  );
+  const layout = document.querySelector<HTMLElement>(".layout");
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      tabs.forEach((t) => t.setAttribute("aria-selected", "false"));
+      tab.setAttribute("aria-selected", "true");
+      if (layout && tab.dataset.panel) {
+        layout.setAttribute("data-active-panel", tab.dataset.panel);
+      }
+    });
   });
 </script>

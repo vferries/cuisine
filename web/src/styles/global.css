@@ -388,6 +388,10 @@ input {
 }
 .cta-cuisson:hover { background: var(--accent); }
 
+.tabs {
+  display: none;
+}
+
 .layout {
   display: grid;
   grid-template-columns: 270px 1fr;
@@ -396,6 +400,36 @@ input {
 }
 @media (max-width: 760px) {
   .layout { grid-template-columns: 1fr; gap: 32px; }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 0.5px solid var(--rule);
+    margin-bottom: 20px;
+  }
+  .tabs button {
+    flex: 1;
+    padding: 12px 8px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--ink-soft);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tabs button[aria-selected="true"] {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+  }
+
+  .layout .panel { display: none; }
+  .layout[data-active-panel="ingredients"] .panel[data-panel="ingredients"],
+  .layout[data-active-panel="steps"] .panel[data-panel="steps"],
+  .layout[data-active-panel="cookware"] .panel[data-panel="cookware"] {
+    display: block;
+  }
 }
 
 .sidebar {
