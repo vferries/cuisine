@@ -15,8 +15,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -61,10 +64,10 @@ fun HomeScreen(
                 title = { Text("Cuisine") },
                 actions = {
                     IconButton(onClick = onSettingsClick) {
-                        Text(
-                            text = "⚙",
-                            fontSize = 22.sp,
-                            color = MaterialTheme.colorScheme.primary,
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Réglages",
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                     }
                 },

@@ -1,6 +1,5 @@
 package fr.vferries.cuisine.ui
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,36 +8,36 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -47,12 +46,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import fr.vferries.cuisine.data.Recipe
 import fr.vferries.cuisine.data.StepToken
@@ -72,51 +69,65 @@ private enum class RecipeTab(val label: String) {
     COOKWARE("Ustensiles"),
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeScreen(
     state: RecipeState,
     onStartCuisson: () -> Unit = {},
     onBack: () -> Unit = {},
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    val title = (state as? RecipeState.Success)?.recipe?.metadata?.get("title").orEmpty()
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = title,
+                        maxLines = 1,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Retour",
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                },
+                actions = {
+                    if (state is RecipeState.Success) {
+                        Button(
+                            onClick = onStartCuisson,
+                            modifier = Modifier.padding(end = 8.dp),
+                        ) { Text("Mode cuisson") }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(),
+            )
+        },
+    ) { padding ->
         when (state) {
             RecipeState.Loading -> Text(
                 text = "Chargement…",
-                modifier = Modifier.safeDrawingPadding().padding(16.dp),
+                modifier = Modifier.padding(padding).padding(16.dp),
             )
             is RecipeState.Error -> Text(
                 text = "Erreur : ${state.message}",
-                modifier = Modifier.safeDrawingPadding().padding(16.dp),
+                modifier = Modifier.padding(padding).padding(16.dp),
             )
-            is RecipeState.Success -> SuccessContent(recipe = state.recipe)
-        }
-        // Boutons flottants en overlay pour ne pas consommer d'espace en haut.
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .safeDrawingPadding()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
-        ) {
-            FilledTonalIconButton(onClick = onBack) {
-                Text(
-                    text = "←",
-                    fontSize = 24.sp,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-            Spacer(Modifier.weight(1f))
-            if (state is RecipeState.Success) {
-                FilledTonalButton(onClick = onStartCuisson) { Text("Mode cuisson") }
-            }
+            is RecipeState.Success -> SuccessContent(
+                recipe = state.recipe,
+                contentPadding = padding,
+            )
         }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun SuccessContent(recipe: Recipe) {
-    val title = recipe.metadata["title"].orEmpty()
+private fun SuccessContent(recipe: Recipe, contentPadding: PaddingValues) {
     val hasImage = recipe.metadata["image"]?.isNotBlank() == true
     val originalServings = recipe.metadata["servings"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
     var currentServings by rememberSaveable(recipe.slug) { mutableIntStateOf(originalServings) }
@@ -129,23 +140,17 @@ private fun SuccessContent(recipe: Recipe) {
 
     var tab by rememberSaveable(recipe.slug) { mutableStateOf(RecipeTab.INGREDIENTS) }
 
-    val listState = rememberLazyListState()
-    // Le hero (item 0) est considéré comme "scrollé hors vue" dès que la liste
-    // ne commence plus à l'item 0.
-    val heroScrolled by remember {
-        derivedStateOf { hasImage && listState.firstVisibleItemIndex > 0 }
-    }
-
     LazyColumn(
-        state = listState,
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(contentPadding),
         contentPadding = PaddingValues(bottom = 32.dp),
     ) {
         if (hasImage) {
             item(key = "hero") {
                 AsyncImage(
                     model = Urls.heroUrl(recipe.slug),
-                    contentDescription = title,
+                    contentDescription = recipe.metadata["title"].orEmpty(),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -153,34 +158,23 @@ private fun SuccessContent(recipe: Recipe) {
                 )
             }
         }
-        item(key = "header") {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineMedium,
-                )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text(text = "Portions", modifier = Modifier.weight(1f))
-                    OutlinedButton(
-                        onClick = { if (currentServings > 1) currentServings-- },
-                        enabled = currentServings > 1,
-                    ) { Text("−") }
-                    Text(text = currentServings.toString())
-                    OutlinedButton(onClick = { currentServings++ }) { Text("+") }
-                }
-            }
-        }
-        stickyHeader(key = "tabs") {
-            Surface(tonalElevation = 2.dp) {
+        stickyHeader(key = "controls") {
+            Surface(tonalElevation = 3.dp) {
                 Column {
-                    AnimatedVisibility(visible = heroScrolled) {
-                        CompactHero(recipe = recipe, hasImage = hasImage, title = title)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                    ) {
+                        Text(text = "Portions", modifier = Modifier.weight(1f))
+                        OutlinedButton(
+                            onClick = { if (currentServings > 1) currentServings-- },
+                            enabled = currentServings > 1,
+                        ) { Text("−") }
+                        Text(text = currentServings.toString())
+                        OutlinedButton(onClick = { currentServings++ }) { Text("+") }
                     }
                     TabRow(selectedTabIndex = tab.ordinal) {
                         RecipeTab.entries.forEach { t ->
@@ -212,33 +206,6 @@ private fun SuccessContent(recipe: Recipe) {
             RecipeTab.STEPS -> stepsItems(recipe = recipe, slug = recipe.slug)
             RecipeTab.COOKWARE -> cookwareItems(recipe = recipe)
         }
-    }
-}
-
-@Composable
-private fun CompactHero(recipe: Recipe, hasImage: Boolean, title: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-    ) {
-        if (hasImage) {
-            AsyncImage(
-                model = Urls.thumbUrl(recipe.slug),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-            )
-            Spacer(Modifier.width(12.dp))
-        }
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.weight(1f),
-        )
     }
 }
 
