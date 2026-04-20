@@ -1,0 +1,109 @@
+---
+import Base from "../../layouts/Base.astro";
+import { flattenSteps } from "../../lib/cuisson";
+
+export async function getStaticPaths() {
+  const modules = import.meta.glob("../../generated/recipes/*.json", {
+    eager: true,
+  });
+  return Object.entries(modules).map(([filePath, mod]) => {
+    const slug = filePath.match(/\/([^/]+)\.json$/)![1];
+    return {
+      params: { slug },
+      props: { recipe: (mod as { default: any }).default },
+    };
+  });
+}
+
+const { recipe } = Astro.props;
+const meta = recipe.metadata as Record<string, string>;
+
+const unitDisplay: Record<string, string> = {
+  "càc": "c. à c.",
+  "càs": "c. à s.",
+};
+const formatUnit = (u?: string) => (u ? unitDisplay[u] ?? u : "");
+
+const steps = flattenSteps(recipe.sections);
+---
+
+<Base title={`${meta.title} — Mode cuisson`}>
+  <main class="cuisson">
+    <header class="cuisson-header">
+      <a href={`/${Astro.params.slug}`} class="cuisson-exit" aria-label="Quitter le mode cuisson">
+        ← Quitter
+      </a>
+      <p class="cuisson-title">{meta.title}</p>
+    </header>
+
+    <p class="cuisson-progress" aria-live="polite">
+      Étape <span class="current">1</span> / <span class="total">{steps.length}</span>
+    </p>
+
+    <div class="cuisson-steps">
+      {steps.map((step, i) => (
+        <article
+          class:list={["cuisson-step", { "is-active": i === 0 }]}
+          data-index={i}
+        >
+          <p class="cuisson-section-label">{step.section}</p>
+          <p class="cuisson-step-text">
+            {step.tokens.map((tok: any) => {
+              if (tok.type === "text") return tok.text;
+              if (tok.type === "ingredient") return tok.ingredient.name;
+              if (tok.type === "cookware") return tok.cookware.name;
+              if (tok.type === "timer") {
+                return (
+                  <span class="step-timer">
+                    {tok.timer.quantity} {formatUnit(tok.timer.unit)}
+                  </span>
+                );
+              }
+              return null;
+            })}
+          </p>
+        </article>
+      ))}
+    </div>
+
+    <nav class="cuisson-controls">
+      <button type="button" aria-label="Précédent">Précédent</button>
+      <button type="button" aria-label="Suivant">Suivant</button>
+    </nav>
+  </main>
+</Base>
+
+<script>
+  const stepEls = document.querySelectorAll<HTMLElement>(".cuisson-step");
+  const currentEl = document.querySelector<HTMLElement>(
+    ".cuisson-progress .current",
+  );
+  const prevBtn = document.querySelector<HTMLButtonElement>(
+    'button[aria-label="Précédent"]',
+  );
+  const nextBtn = document.querySelector<HTMLButtonElement>(
+    'button[aria-label="Suivant"]',
+  );
+  const total = stepEls.length;
+  let index = 0;
+
+  function render() {
+    stepEls.forEach((el, i) => {
+      el.classList.toggle("is-active", i === index);
+    });
+    if (currentEl) currentEl.textContent = String(index + 1);
+  }
+
+  nextBtn?.addEventListener("click", () => {
+    if (index < total - 1) {
+      index += 1;
+      render();
+    }
+  });
+  prevBtn?.addEventListener("click", () => {
+    if (index > 0) {
+      index -= 1;
+      render();
+    }
+  });
+</script>
