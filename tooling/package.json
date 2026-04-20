@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build-index": "tsx src/build-index.ts"
+    "build-index": "tsx src/build-index.ts",
+    "test": "vitest run"
   },
   "devDependencies": {
     "tsx": "^4.19.0",
