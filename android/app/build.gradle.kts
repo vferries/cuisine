@@ -19,9 +19,24 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            val ksFile = rootProject.file("keystore/release.keystore")
+            if (ksFile.exists()) {
+                storeFile = ksFile
+                storePassword = System.getenv("SIGNING_KEYSTORE_PASSWORD") ?: ""
+                keyAlias = System.getenv("SIGNING_KEY_ALIAS") ?: ""
+                keyPassword = System.getenv("SIGNING_KEY_PASSWORD") ?: ""
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfigs.findByName("release")?.let {
+                if (it.storeFile != null) signingConfig = it
+            }
         }
     }
 

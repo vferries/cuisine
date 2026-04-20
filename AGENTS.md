@@ -156,11 +156,35 @@ Faits (tout le périmètre web) :
 - [x] Onglets mobile sur la vue recette.
 - [x] Checklist ingrédients (cochable, persisté par slug).
 - [x] Timer tray global, stack, click-to-start depuis détail ou cuisson, persistance cross-page, son + blink à l'expiration.
+- [x] App Android Kotlin + Compose Material3 en parité fonctionnelle : liste (vignette Coil + cuisine/durée/pers/difficulté), recherche, chips, détail avec hero collapsing, onglets Ingrédients/Étapes/Ustensiles, portions sticky, checklist, mode cuisson pas-à-pas avec Wake Lock, timer tray global avec son + clignotement, dark mode auto + toggle dans Settings, cache Room avec fallback offline.
+- [x] Release pipeline Android : workflow `android-release.yml` déclenché sur tag `v*.*.*`, APK signé uploadé en GitHub Release.
 
 Reste à faire :
 
-1. **Squelette Android** en Kotlin + Compose (sync depuis Pages au premier lancement, cache Room ou fichiers).
-2. **PWA offline** — si l'utilisateur change d'avis (Android reste prioritaire).
+1. **Favoris** (web + Android) avec chip "Favoris".
+2. **Service foreground pour les timers Android** (survivre au kill de l'app pendant la cuisson).
+3. **Liste de courses** agrégée multi-recettes.
+4. **PWA offline** — si l'utilisateur change d'avis.
+
+### Setup release Android (one-time)
+
+Générer la keystore localement :
+
+```bash
+keytool -genkey -v \
+  -keystore cuisine-release.keystore \
+  -alias cuisine -keyalg RSA -keysize 2048 -validity 10000
+base64 -w 0 cuisine-release.keystore
+```
+
+Ajouter les 4 secrets sur GitHub (Settings → Secrets and variables → Actions) :
+
+- `SIGNING_KEYSTORE_B64` : sortie du `base64 -w 0 …`
+- `SIGNING_KEYSTORE_PASSWORD`
+- `SIGNING_KEY_ALIAS` (ex. `cuisine`)
+- `SIGNING_KEY_PASSWORD`
+
+Puis `git tag v0.1.0 && git push --tags` déclenche le workflow et publie l'APK.
 
 ## Conventions de code
 
