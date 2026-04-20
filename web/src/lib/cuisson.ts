@@ -25,3 +25,26 @@ export function flattenSteps(sections: Section[]): FlatStep[] {
     s.steps.map((step) => ({ section: s.name, tokens: step.tokens })),
   );
 }
+
+const UNIT_TO_SECONDS: Record<string, number> = {
+  sec: 1,
+  min: 60,
+  h: 3600,
+};
+
+export function timerSeconds(timer: {
+  quantity: number | string;
+  unit: string;
+}): number {
+  const q = typeof timer.quantity === "number"
+    ? timer.quantity
+    : parseFloat(timer.quantity);
+  return q * (UNIT_TO_SECONDS[timer.unit] ?? 0);
+}
+
+export function formatSecondsAsTime(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds));
+  const minutes = Math.floor(s / 60);
+  const remaining = s % 60;
+  return `${minutes}:${String(remaining).padStart(2, "0")}`;
+}

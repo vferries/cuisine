@@ -86,7 +86,7 @@ Syntaxe : `~nom{durée%unité}`.
 - **Toujours nommer** le timer : le nom apparaît dans l'UI quand plusieurs timers tournent en parallèle. `~mijotage{15%min}` est plus lisible que `~{15%min}`.
 - Unités : `sec`, `min`, `h`.
 
-Le mode cuisson démarre automatiquement le timer au passage sur l'étape concernée. Si l'étape en contient plusieurs, tous démarrent ensemble.
+En mode cuisson, chaque timer démarre quand l'utilisateur clique sur sa pill. Choix explicite pour ne pas coupler navigation (lire l'étape, vérifier l'étape suivante) et démarrage réel de la cuisson.
 
 ## Commentaires
 

@@ -595,3 +595,12 @@ input {
   background: var(--accent);
   border-color: var(--accent);
 }
+.cuisson-step .step-timer {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, color 0.15s;
+}
+.cuisson-step .step-timer.is-running {
+  background: var(--accent);
+  color: var(--paper);
+}

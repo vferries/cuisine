@@ -1,6 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { flattenSteps } from "../../lib/cuisson";
+import { flattenSteps, formatSecondsAsTime, timerSeconds } from "../../lib/cuisson";
 
 export async function getStaticPaths() {
   const modules = import.meta.glob("../../generated/recipes/*.json", {
@@ -53,10 +53,9 @@ const steps = flattenSteps(recipe.sections);
               if (tok.type === "ingredient") return tok.ingredient.name;
               if (tok.type === "cookware") return tok.cookware.name;
               if (tok.type === "timer") {
+                const seconds = timerSeconds(tok.timer);
                 return (
-                  <span class="step-timer">
-                    {tok.timer.quantity} {formatUnit(tok.timer.unit)}
-                  </span>
+                  <span class="step-timer" data-seconds={seconds}>{formatSecondsAsTime(seconds)}</span>
                 );
               }
               return null;
@@ -74,6 +73,8 @@ const steps = flattenSteps(recipe.sections);
 </Base>
 
 <script>
+  import { formatSecondsAsTime } from "../../lib/cuisson";
+
   const stepEls = document.querySelectorAll<HTMLElement>(".cuisson-step");
   const currentEl = document.querySelector<HTMLElement>(
     ".cuisson-progress .current",
@@ -86,12 +87,52 @@ const steps = flattenSteps(recipe.sections);
   );
   const total = stepEls.length;
   let index = 0;
+  let runningIntervals: number[] = [];
+
+  function stopRunningTimers() {
+    runningIntervals.forEach((id) => window.clearInterval(id));
+    runningIntervals = [];
+    document
+      .querySelectorAll<HTMLElement>(".step-timer.is-running")
+      .forEach((el) => {
+        el.classList.remove("is-running");
+        const duration = Number(el.dataset.seconds);
+        if (!Number.isNaN(duration)) {
+          el.textContent = formatSecondsAsTime(duration);
+        }
+      });
+  }
+
+  function startTimer(el: HTMLElement) {
+    if (el.classList.contains("is-running")) return;
+    const duration = Number(el.dataset.seconds);
+    if (!Number.isFinite(duration) || duration <= 0) return;
+    el.classList.add("is-running");
+    let remaining = duration;
+    el.textContent = formatSecondsAsTime(remaining);
+    const id = window.setInterval(() => {
+      remaining -= 1;
+      el.textContent = formatSecondsAsTime(remaining);
+      if (remaining <= 0) {
+        window.clearInterval(id);
+        el.classList.remove("is-running");
+      }
+    }, 1000);
+    runningIntervals.push(id);
+  }
+
+  document
+    .querySelectorAll<HTMLElement>(".step-timer[data-seconds]")
+    .forEach((el) => {
+      el.addEventListener("click", () => startTimer(el));
+    });
 
   function render() {
     stepEls.forEach((el, i) => {
       el.classList.toggle("is-active", i === index);
     });
     if (currentEl) currentEl.textContent = String(index + 1);
+    stopRunningTimers();
   }
 
   nextBtn?.addEventListener("click", () => {

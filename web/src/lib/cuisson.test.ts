@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { flattenSteps } from "./cuisson";
+import {
+  flattenSteps,
+  formatSecondsAsTime,
+  timerSeconds,
+} from "./cuisson";
 
 const step = (text: string) => ({ tokens: [{ type: "text" as const, text }] });
 
@@ -15,5 +19,33 @@ describe("flattenSteps", () => {
       "Préparation",
       "Cuisson",
     ]);
+  });
+});
+
+describe("timerSeconds", () => {
+  it("convertit les minutes en secondes", () => {
+    expect(timerSeconds({ quantity: 3, unit: "min" })).toBe(180);
+  });
+
+  it("retourne les secondes telles quelles", () => {
+    expect(timerSeconds({ quantity: 45, unit: "sec" })).toBe(45);
+  });
+
+  it("convertit les heures en secondes", () => {
+    expect(timerSeconds({ quantity: 1, unit: "h" })).toBe(3600);
+  });
+});
+
+describe("formatSecondsAsTime", () => {
+  it("formate 3 minutes rondes en M:SS", () => {
+    expect(formatSecondsAsTime(180)).toBe("3:00");
+  });
+
+  it("formate 2 min 5 sec en M:SS", () => {
+    expect(formatSecondsAsTime(125)).toBe("2:05");
+  });
+
+  it("formate 59 sec en 0:59", () => {
+    expect(formatSecondsAsTime(59)).toBe("0:59");
   });
 });
