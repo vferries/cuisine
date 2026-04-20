@@ -61,7 +61,7 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
 
     <ul class="recipe-list">
       {recipes.map((r) => (
-        <li class="recipe-row">
+        <li class="recipe-row" data-slug={r.slug}>
           <a href={`/${r.slug}`}>
             <div class={`thumb ${thumbClass(r.cuisine)}`}>
               <svg width="36" height="36" viewBox="0 0 34 34" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
@@ -94,3 +94,32 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
     )}
   </main>
 </Base>
+
+<script>
+  import indexData from "../generated/index.json";
+  import { matchingRecipeSlugs, type RecipeSearchDoc } from "../lib/search";
+
+  const recipes = indexData.recipes as RecipeSearchDoc[];
+  const input = document.querySelector<HTMLInputElement>(
+    'input[type="search"]',
+  );
+  const list = document.querySelector<HTMLUListElement>(".recipe-list");
+  if (input && list) {
+    const rowBySlug = new Map<string, HTMLElement>();
+    list
+      .querySelectorAll<HTMLElement>(".recipe-row[data-slug]")
+      .forEach((row) => {
+        rowBySlug.set(row.dataset.slug!, row);
+      });
+
+    input.addEventListener("input", (event) => {
+      const query = (event.target as HTMLInputElement).value;
+      const slugs = matchingRecipeSlugs(recipes, query);
+      list.replaceChildren();
+      for (const slug of slugs) {
+        const row = rowBySlug.get(slug);
+        if (row) list.appendChild(row);
+      }
+    });
+  }
+</script>
