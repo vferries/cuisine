@@ -118,13 +118,16 @@ const totalTime =
         </div>
 
         <div class="panel" data-panel="ingredients">
-          <p class="section-label">Ingrédients</p>
-          <ul class="ingredient-list">
+          <div class="panel-header">
+            <p class="section-label">Ingrédients</p>
+            <button type="button" class="checklist-clear">Tout décocher</button>
+          </div>
+          <ul class="ingredient-list" data-slug={Astro.params.slug}>
             {recipe.ingredients.map((ing: any) => {
               const hasNumericQty = typeof ing.quantity === "number";
               const qty = formatQty(ing.quantity, ing.unit);
               return (
-                <li>
+                <li data-ingredient={ing.name}>
                   <div class="check" aria-hidden="true"></div>
                   <span class="name">{ing.name}</span>
                   {qty ? (
@@ -232,6 +235,48 @@ const totalTime =
       render();
     }
   });
+
+  const ingredientList = document.querySelector<HTMLElement>(".ingredient-list");
+  const clearBtn = document.querySelector<HTMLButtonElement>(".checklist-clear");
+  if (ingredientList) {
+    const slug = ingredientList.dataset.slug ?? "";
+    const storageKey = `ingredients-checked:${slug}`;
+    const readChecked = (): Set<string> => {
+      try {
+        return new Set(JSON.parse(localStorage.getItem(storageKey) ?? "[]"));
+      } catch {
+        return new Set();
+      }
+    };
+    const writeChecked = (set: Set<string>) => {
+      localStorage.setItem(storageKey, JSON.stringify([...set]));
+    };
+
+    const checked = readChecked();
+    const items = ingredientList.querySelectorAll<HTMLElement>("li[data-ingredient]");
+    items.forEach((li) => {
+      if (checked.has(li.dataset.ingredient!)) {
+        li.classList.add("is-checked");
+      }
+      li.addEventListener("click", () => {
+        const name = li.dataset.ingredient!;
+        if (checked.has(name)) {
+          checked.delete(name);
+          li.classList.remove("is-checked");
+        } else {
+          checked.add(name);
+          li.classList.add("is-checked");
+        }
+        writeChecked(checked);
+      });
+    });
+
+    clearBtn?.addEventListener("click", () => {
+      checked.clear();
+      writeChecked(checked);
+      items.forEach((li) => li.classList.remove("is-checked"));
+    });
+  }
 
   const tabs = document.querySelectorAll<HTMLButtonElement>(
     '.tabs [role="tab"]',
