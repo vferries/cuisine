@@ -1,5 +1,6 @@
 package fr.vferries.cuisine.ui
 
+import fr.vferries.cuisine.data.Recipe
 import fr.vferries.cuisine.data.RecipeMeta
 import fr.vferries.cuisine.data.RecipeRepository
 import kotlinx.coroutines.Dispatchers
@@ -37,10 +38,12 @@ class HomeViewModelTest {
 
     private class FakeRepo(val recipes: List<RecipeMeta>) : RecipeRepository {
         override suspend fun listRecipes(): List<RecipeMeta> = recipes
+        override suspend fun getRecipe(slug: String): Recipe = error("not used")
     }
 
     private class FailingRepo(val error: Throwable) : RecipeRepository {
         override suspend fun listRecipes(): List<RecipeMeta> = throw error
+        override suspend fun getRecipe(slug: String): Recipe = throw error
     }
 
     @Test
