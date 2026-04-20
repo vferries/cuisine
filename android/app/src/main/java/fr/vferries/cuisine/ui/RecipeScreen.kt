@@ -1,6 +1,5 @@
 package fr.vferries.cuisine.ui
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -125,7 +124,6 @@ fun RecipeScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SuccessContent(recipe: Recipe, contentPadding: PaddingValues) {
     val hasImage = recipe.metadata["image"]?.isNotBlank() == true
@@ -140,71 +138,68 @@ private fun SuccessContent(recipe: Recipe, contentPadding: PaddingValues) {
 
     var tab by rememberSaveable(recipe.slug) { mutableStateOf(RecipeTab.INGREDIENTS) }
 
-    LazyColumn(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(contentPadding),
-        contentPadding = PaddingValues(bottom = 32.dp),
     ) {
         if (hasImage) {
-            item(key = "hero") {
-                AsyncImage(
-                    model = Urls.heroUrl(recipe.slug),
-                    contentDescription = recipe.metadata["title"].orEmpty(),
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(4f / 3f),
+            AsyncImage(
+                model = Urls.heroUrl(recipe.slug),
+                contentDescription = recipe.metadata["title"].orEmpty(),
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 240.dp)
+                    .aspectRatio(16f / 9f),
+            )
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        ) {
+            Text(text = "Portions", modifier = Modifier.weight(1f))
+            OutlinedButton(
+                onClick = { if (currentServings > 1) currentServings-- },
+                enabled = currentServings > 1,
+            ) { Text("−") }
+            Text(text = currentServings.toString())
+            OutlinedButton(onClick = { currentServings++ }) { Text("+") }
+        }
+        TabRow(selectedTabIndex = tab.ordinal) {
+            RecipeTab.entries.forEach { t ->
+                Tab(
+                    selected = tab == t,
+                    onClick = { tab = t },
+                    text = { Text(t.label) },
                 )
             }
         }
-        stickyHeader(key = "controls") {
-            Surface(tonalElevation = 3.dp) {
-                Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                    ) {
-                        Text(text = "Portions", modifier = Modifier.weight(1f))
-                        OutlinedButton(
-                            onClick = { if (currentServings > 1) currentServings-- },
-                            enabled = currentServings > 1,
-                        ) { Text("−") }
-                        Text(text = currentServings.toString())
-                        OutlinedButton(onClick = { currentServings++ }) { Text("+") }
-                    }
-                    TabRow(selectedTabIndex = tab.ordinal) {
-                        RecipeTab.entries.forEach { t ->
-                            Tab(
-                                selected = tab == t,
-                                onClick = { tab = t },
-                                text = { Text(t.label) },
-                            )
-                        }
-                    }
-                }
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 32.dp),
+        ) {
+            when (tab) {
+                RecipeTab.INGREDIENTS -> ingredientsItems(
+                    recipe = recipe,
+                    checked = checked,
+                    ratio = ratio,
+                    onToggle = { name ->
+                        val next = if (name in checked) checked - name else checked + name
+                        checked = next
+                        store.set(recipe.slug, next)
+                    },
+                    onClearAll = {
+                        checked = emptySet()
+                        store.set(recipe.slug, emptySet())
+                    },
+                )
+                RecipeTab.STEPS -> stepsItems(recipe = recipe, slug = recipe.slug)
+                RecipeTab.COOKWARE -> cookwareItems(recipe = recipe)
             }
-        }
-        when (tab) {
-            RecipeTab.INGREDIENTS -> ingredientsItems(
-                recipe = recipe,
-                checked = checked,
-                ratio = ratio,
-                onToggle = { name ->
-                    val next = if (name in checked) checked - name else checked + name
-                    checked = next
-                    store.set(recipe.slug, next)
-                },
-                onClearAll = {
-                    checked = emptySet()
-                    store.set(recipe.slug, emptySet())
-                },
-            )
-            RecipeTab.STEPS -> stepsItems(recipe = recipe, slug = recipe.slug)
-            RecipeTab.COOKWARE -> cookwareItems(recipe = recipe)
         }
     }
 }
