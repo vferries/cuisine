@@ -102,7 +102,7 @@ const totalTime =
           </svg>
         </div>
 
-        <div class="portions">
+        <div class="portions" data-original-servings={meta.servings}>
           <span class="muted">Portions</span>
           <div class="controls">
             <button type="button" aria-label="Diminuer">−</button>
@@ -114,13 +114,20 @@ const totalTime =
         <p class="section-label">Ingrédients</p>
         <ul class="ingredient-list">
           {recipe.ingredients.map((ing: any) => {
+            const hasNumericQty = typeof ing.quantity === "number";
             const qty = formatQty(ing.quantity, ing.unit);
             return (
               <li>
                 <div class="check" aria-hidden="true"></div>
                 <span class="name">{ing.name}</span>
                 {qty ? (
-                  <span class="qty">{qty}</span>
+                  <span
+                    class="qty"
+                    data-qty={hasNumericQty ? ing.quantity : undefined}
+                    data-unit={hasNumericQty ? formatUnit(ing.unit) : undefined}
+                  >
+                    {qty}
+                  </span>
                 ) : (
                   <span class="qty is-muted">au goût</span>
                 )}
@@ -180,3 +187,40 @@ const totalTime =
     </div>
   </main>
 </Base>
+
+<script>
+  import { scaleQuantity } from "../lib/scale";
+
+  const portions = document.querySelector<HTMLElement>(".portions");
+  const valueEl = document.getElementById("portions-value");
+  const minusBtn = portions?.querySelector<HTMLButtonElement>(
+    'button[aria-label="Diminuer"]',
+  );
+  const plusBtn = portions?.querySelector<HTMLButtonElement>(
+    'button[aria-label="Augmenter"]',
+  );
+  const original = Number(portions?.dataset.originalServings ?? "1");
+  let current = original;
+
+  function render() {
+    if (valueEl) valueEl.textContent = String(current);
+    const ratio = current / original;
+    document.querySelectorAll<HTMLElement>(".qty[data-qty]").forEach((el) => {
+      const base = Number(el.dataset.qty);
+      const unit = el.dataset.unit ?? "";
+      const scaled = scaleQuantity(base, ratio);
+      el.textContent = unit ? `${scaled} ${unit}` : String(scaled);
+    });
+  }
+
+  plusBtn?.addEventListener("click", () => {
+    current += 1;
+    render();
+  });
+  minusBtn?.addEventListener("click", () => {
+    if (current > 1) {
+      current -= 1;
+      render();
+    }
+  });
+</script>
