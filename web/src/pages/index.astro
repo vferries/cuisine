@@ -43,12 +43,12 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
     </div>
 
     <nav class="chips" aria-label="Filtres rapides">
-      <button class="chip is-active" type="button">Toutes</button>
-      <button class="chip" type="button">Rapide</button>
-      <button class="chip" type="button">Végé</button>
-      <button class="chip" type="button">Asiatique</button>
-      <button class="chip" type="button">Français</button>
-      <button class="chip" type="button">Dessert</button>
+      <button class="chip is-active" type="button" data-chip="all">Toutes</button>
+      <button class="chip" type="button" data-chip="rapide">Rapide</button>
+      <button class="chip" type="button" data-chip="vege">Végé</button>
+      <button class="chip" type="button" data-chip="asiatique">Asiatique</button>
+      <button class="chip" type="button" data-chip="francais">Français</button>
+      <button class="chip" type="button" data-chip="dessert">Dessert</button>
     </nav>
 
     <div class="count-row">
@@ -98,12 +98,17 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
 <script>
   import indexData from "../generated/index.json";
   import { matchingRecipeSlugs, type RecipeSearchDoc } from "../lib/search";
+  import { filterByChip, type ChipKey, type ChipFilterDoc } from "../lib/chips";
 
-  const recipes = indexData.recipes as RecipeSearchDoc[];
+  const recipes = indexData.recipes as RecipeSearchDoc[] & ChipFilterDoc[];
   const input = document.querySelector<HTMLInputElement>(
     'input[type="search"]',
   );
   const list = document.querySelector<HTMLUListElement>(".recipe-list");
+  const chipButtons = document.querySelectorAll<HTMLButtonElement>(
+    ".chip[data-chip]",
+  );
+
   if (input && list) {
     const rowBySlug = new Map<string, HTMLElement>();
     list
@@ -112,14 +117,33 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
         rowBySlug.set(row.dataset.slug!, row);
       });
 
-    input.addEventListener("input", (event) => {
-      const query = (event.target as HTMLInputElement).value;
-      const slugs = matchingRecipeSlugs(recipes, query);
-      list.replaceChildren();
+    let currentQuery = "";
+    let activeChip: ChipKey = "all";
+
+    function render() {
+      const allowed = new Set(filterByChip(recipes, activeChip));
+      const slugs = matchingRecipeSlugs(recipes, currentQuery).filter((s) =>
+        allowed.has(s),
+      );
+      list!.replaceChildren();
       for (const slug of slugs) {
         const row = rowBySlug.get(slug);
-        if (row) list.appendChild(row);
+        if (row) list!.appendChild(row);
       }
+    }
+
+    input.addEventListener("input", (event) => {
+      currentQuery = (event.target as HTMLInputElement).value;
+      render();
+    });
+
+    chipButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeChip = btn.dataset.chip as ChipKey;
+        chipButtons.forEach((b) => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
+        render();
+      });
     });
   }
 </script>
