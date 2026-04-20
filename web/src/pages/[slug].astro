@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import { withBase } from "../lib/url";
 
 export async function getStaticPaths() {
   const modules = import.meta.glob("../generated/recipes/*.json", {
@@ -51,7 +52,7 @@ const totalTime =
 
 <Base title={meta.title}>
   <main class="shell">
-    <a href="/" class="back-link">
+    <a href={withBase(import.meta.env.BASE_URL, "/")} class="back-link">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="15 18 9 12 15 6" />
       </svg>
@@ -83,7 +84,7 @@ const totalTime =
           <span>Difficulté {meta.difficulty}</span>
         </div>
       </div>
-      <a class="cta-cuisson" href={`/cuisson/${Astro.params.slug}`}>
+      <a class="cta-cuisson" href={withBase(import.meta.env.BASE_URL, `cuisson/${Astro.params.slug}`)}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
           <polygon points="5 3 19 12 5 21 5 3" />
         </svg>

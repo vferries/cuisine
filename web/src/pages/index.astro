@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import indexData from "../generated/index.json";
+import { withBase } from "../lib/url";
 
 interface RecipeMeta {
   slug: string;
@@ -62,7 +63,7 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
     <ul class="recipe-list">
       {recipes.map((r) => (
         <li class="recipe-row" data-slug={r.slug}>
-          <a href={`/${r.slug}`}>
+          <a href={withBase(import.meta.env.BASE_URL, r.slug)}>
             <div class={`thumb ${thumbClass(r.cuisine)}`}>
               <svg width="36" height="36" viewBox="0 0 34 34" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 16 L30 16 Q29 27 17 28 Q5 27 4 16 Z" />
