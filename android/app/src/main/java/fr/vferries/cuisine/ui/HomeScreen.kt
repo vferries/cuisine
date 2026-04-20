@@ -14,8 +14,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import fr.vferries.cuisine.data.RecipeMeta
 import fr.vferries.cuisine.data.Urls
+import fr.vferries.cuisine.data.matchingRecipeSlugs
 
 sealed interface HomeState {
     data object Loading : HomeState
@@ -42,14 +49,44 @@ fun HomeScreen(
             text = "Erreur : ${state.message}",
             modifier = Modifier.padding(16.dp),
         )
-        is HomeState.Success -> LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            items(state.recipes, key = { it.slug }) { recipe ->
-                RecipeRow(recipe = recipe, onClick = { onRecipeClick(recipe.slug) })
+        is HomeState.Success -> SuccessList(
+            recipes = state.recipes,
+            onRecipeClick = onRecipeClick,
+        )
+    }
+}
+
+@Composable
+private fun SuccessList(recipes: List<RecipeMeta>, onRecipeClick: (String) -> Unit) {
+    var query by rememberSaveable { mutableStateOf("") }
+    val filtered = remember(recipes, query) {
+        val matching = matchingRecipeSlugs(recipes, query).toSet()
+        recipes.filter { it.slug in matching }
+    }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        item {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                placeholder = { Text("Nom, ingrédient, tag…") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        if (filtered.isEmpty()) {
+            item {
+                Text(
+                    text = "Aucune recette",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
+        }
+        items(filtered, key = { it.slug }) { recipe ->
+            RecipeRow(recipe = recipe, onClick = { onRecipeClick(recipe.slug) })
         }
     }
 }
