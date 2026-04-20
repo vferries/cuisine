@@ -7,6 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "../..");
 const RECIPES_DIR = path.join(ROOT, "recipes");
 const OUT_DIR = path.join(ROOT, "web/src/generated");
+const PUBLIC_DIR = path.join(ROOT, "web/public/data");
 
 interface RecipeMeta {
   slug: string;
@@ -126,11 +127,17 @@ async function main() {
     "utf-8",
   );
 
+  // Mirror pour servir publiquement (consommé par l'app Android via HTTP).
+  await fs.rm(PUBLIC_DIR, { recursive: true, force: true });
+  await fs.mkdir(path.join(PUBLIC_DIR, "recipes"), { recursive: true });
+  await fs.cp(OUT_DIR, PUBLIC_DIR, { recursive: true });
+
   console.log(
     `\n✓ Built ${metaList.length} recipe${metaList.length > 1 ? "s" : ""}`,
     errors > 0 ? `(${errors} error${errors > 1 ? "s" : ""})` : "",
   );
   console.log(`  → ${path.relative(ROOT, OUT_DIR)}/index.json`);
+  console.log(`  → ${path.relative(ROOT, PUBLIC_DIR)}/index.json (public)`);
 
   if (errors > 0) process.exit(1);
 }

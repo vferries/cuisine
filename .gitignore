@@ -8,6 +8,7 @@ dist/
 web/src/generated/recipes/
 web/src/generated/index.json
 web/public/images/
+web/public/data/
 
 # Playwright
 web/test-results/
