@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import { timerSeconds } from "../lib/cuisson";
 import { formatQty, formatUnit, pluralizeName } from "../lib/format";
 import { withBase } from "../lib/url";
 
@@ -156,20 +157,28 @@ const totalTime =
       </aside>
 
       <section class="panel" data-panel="steps">
-        {sectionsWithNumbers.map((section: any) => (
+        {sectionsWithNumbers.map((section: any, sectionIdx: number) => (
           <div>
             <h2 class="section-heading">{section.name}</h2>
             {section.steps.map((step: any, i: number) => (
               <div class="step">
                 <div class="step-num">{section.startNum + i}</div>
                 <p class="step-text">
-                  {step.tokens.map((tok: any) => {
+                  {step.tokens.map((tok: any, tokIdx: number) => {
                     if (tok.type === "text") return tok.text;
                     if (tok.type === "ingredient") return tok.ingredient.name;
                     if (tok.type === "cookware") return tok.cookware.name;
                     if (tok.type === "timer") {
+                      const seconds = timerSeconds(tok.timer);
+                      const timerId = `${Astro.params.slug}:${sectionIdx}:${i}:${tokIdx}`;
+                      const name = tok.timer.name || section.name;
                       return (
-                        <span class="step-timer">
+                        <span
+                          class="step-timer"
+                          data-seconds={seconds}
+                          data-timer-id={timerId}
+                          data-timer-name={name}
+                        >
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10" />
                             <polyline points="12 6 12 12 16 14" />

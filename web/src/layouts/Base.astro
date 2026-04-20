@@ -39,6 +39,98 @@ const { title, description = "Mes recettes en Cooklang" } = Astro.props;
     </button>
     <slot />
 
+    <aside class="timer-tray" aria-label="Timers en cours" hidden>
+      <ul class="timer-list"></ul>
+    </aside>
+
+    <script>
+      import {
+        addTimer,
+        isExpired,
+        remainingSeconds,
+        removeTimer,
+        type Timer,
+      } from "../lib/timers";
+      import { formatSecondsAsTime } from "../lib/cuisson";
+
+      const STORAGE_KEY = "active-timers";
+
+      function readTimers(): Timer[] {
+        try {
+          return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
+        } catch {
+          return [];
+        }
+      }
+      function writeTimers(timers: Timer[]): void {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(timers));
+      }
+
+      const tray = document.querySelector<HTMLElement>(".timer-tray");
+      const list = tray?.querySelector<HTMLElement>(".timer-list");
+
+      function render() {
+        if (!tray || !list) return;
+        const timers = readTimers();
+        if (timers.length === 0) {
+          tray.hidden = true;
+          list.replaceChildren();
+          return;
+        }
+        tray.hidden = false;
+        const now = Date.now();
+        list.replaceChildren(
+          ...timers.map((t) => {
+            const li = document.createElement("li");
+            li.className = "timer-item";
+            li.dataset.timerId = t.id;
+            if (isExpired(t, now)) li.classList.add("is-expired");
+            const name = document.createElement("div");
+            name.className = "timer-name";
+            name.textContent = t.name;
+            const rem = document.createElement("div");
+            rem.className = "timer-remaining";
+            rem.textContent = formatSecondsAsTime(
+              Math.max(0, remainingSeconds(t, now)),
+            );
+            const dismiss = document.createElement("button");
+            dismiss.type = "button";
+            dismiss.setAttribute("aria-label", `Arrêter le timer ${t.name}`);
+            dismiss.textContent = "✕";
+            dismiss.addEventListener("click", () => {
+              writeTimers(removeTimer(readTimers(), t.id));
+              render();
+            });
+            li.append(name, rem, dismiss);
+            return li;
+          }),
+        );
+      }
+
+      document
+        .querySelectorAll<HTMLElement>(".step-timer[data-seconds]")
+        .forEach((el) => {
+          el.addEventListener("click", () => {
+            const id = el.dataset.timerId;
+            const name = el.dataset.timerName ?? "Timer";
+            const duration = Number(el.dataset.seconds);
+            if (!id || !Number.isFinite(duration) || duration <= 0) return;
+            writeTimers(
+              addTimer(readTimers(), {
+                id,
+                name,
+                durationSeconds: duration,
+                startedAt: Date.now(),
+              }),
+            );
+            render();
+          });
+        });
+
+      setInterval(render, 1000);
+      render();
+    </script>
+
     <script>
       const root = document.documentElement;
       const btn = document.getElementById("theme-toggle");

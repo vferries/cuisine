@@ -21,6 +21,18 @@ describe("flattenSteps", () => {
       "Cuisson",
     ]);
   });
+
+  it("expose sectionIdx et stepIdx pour composer des identifiants stables", () => {
+    const flat = flattenSteps([
+      { name: "Préparation", steps: [step("a"), step("b")] },
+      { name: "Cuisson", steps: [step("c")] },
+    ]);
+    expect(flat.map((f) => [f.sectionIdx, f.stepIdx])).toEqual([
+      [0, 0],
+      [0, 1],
+      [1, 0],
+    ]);
+  });
 });
 
 describe("timerSeconds", () => {

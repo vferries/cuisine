@@ -17,12 +17,19 @@ export interface Section {
 
 export interface FlatStep {
   section: string;
+  sectionIdx: number;
+  stepIdx: number;
   tokens: StepToken[];
 }
 
 export function flattenSteps(sections: Section[]): FlatStep[] {
-  return sections.flatMap((s) =>
-    s.steps.map((step) => ({ section: s.name, tokens: step.tokens })),
+  return sections.flatMap((s, sectionIdx) =>
+    s.steps.map((step, stepIdx) => ({
+      section: s.name,
+      sectionIdx,
+      stepIdx,
+      tokens: step.tokens,
+    })),
   );
 }
 

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("mode cuisson : le timer s'affiche en MM:SS et décompte après clic", async ({
+test("mode cuisson : le pill timer d'une étape affiche MM:SS statique, click alimente le tray", async ({
   page,
 }) => {
   await page.goto("/cuisson/porc-bigorre-caramel");
@@ -15,11 +15,9 @@ test("mode cuisson : le timer s'affiche en MM:SS et décompte après clic", asyn
   const firstTimer = timer.first();
   await expect(firstTimer).toHaveText(/^\d+:[0-5]\d$/);
 
-  const beforeClick = await firstTimer.textContent();
-  await page.waitForTimeout(1200);
-  expect(await firstTimer.textContent()).toBe(beforeClick);
+  const trayItems = page.locator(".timer-item");
+  await expect(trayItems).toHaveCount(0);
 
   await firstTimer.click();
-  await page.waitForTimeout(1200);
-  expect(await firstTimer.textContent()).not.toBe(beforeClick);
+  await expect(trayItems).toHaveCount(1);
 });
