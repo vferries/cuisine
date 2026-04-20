@@ -88,16 +88,24 @@ Définie en CSS variables dans `web/src/styles/global.css` :
 
 Route `/cuisson/[slug]`, plein écran, une étape à la fois (Précédent/Suivant), typo clamp 22–32px, cibles tactiles ≥ 56px. Déclenché par le bouton "Mode cuisson" en haut à droite de chaque recette.
 
-**Timers** : clic sur la pill → démarre le décompte (pas d'auto-start sur navigation — choix explicite pour ne pas coupler "lire l'étape" à "démarrer la cuisson"). Pill passe en corail inversé pendant le run. Navigation entre étapes stoppe et reset les timers en cours.
-
 **Wake Lock** : `navigator.wakeLock.request("screen")` appelé au chargement, feature-detected. Le browser relâche à l'unload.
+
+### Timers globaux
+
+Timer tray fixe (bas-droite), monté dans `Base.astro`, visible sur toutes les pages dès qu'il y a ≥ 1 timer actif. Click sur n'importe quelle pill `.step-timer[data-seconds]` (page détail OU mode cuisson) crée un timer dans `localStorage["active-timers"]`. Idempotent par id stable (`slug:sectionIdx:stepIdx:tokenIdx`) — cliquer la même pill sur les deux pages ne double pas.
+
+À l'expiration (remaining ≤ 0) : animation `timer-blink` (alterne tint ↔ accent, 0.9s infinite), son `web/public/audio/timer-beep.mp3` joué **une fois** par transition (Set `notified` en mémoire session). Dismiss via ✕ retire l'item du storage et du Set notified.
+
+### Checklist ingrédients
+
+Click sur un `<li>` d'ingrédient toggle `.is-checked` (strike-through + dim 45%, check pill corail). Persisté par recette (`localStorage["ingredients-checked:{slug}"]`). Bouton "Tout décocher" dans le panel-header. Indépendant du changement de portions (décoche pas automatiquement).
 
 ### Accessibilité et détails à respecter
 
 - Cibles tactiles ≥ 44px.
 - Contraste AA minimum.
 - Mains sales : pas d'interactions fines, gros boutons en mode cuisson.
-- Dark mode : pas encore implémenté, à prévoir.
+- Dark mode : auto via `prefers-color-scheme`, override toggle persisté en localStorage.
 
 ## État actuel du code
 
@@ -109,10 +117,11 @@ Route `/cuisson/[slug]`, plein écran, une étape à la fois (Précédent/Suivan
 - Validator étendu (`tooling/src/validate-cook.ts`) — errors : metadata requises, difficulty enum, servings > 0, aucune étape, image absente. Warnings : tags/source absents, unités hors liste, pluriels (pour guider vers singulier).
 - Image pipeline (`tooling/src/build-images.ts`) — sharp convertit `recipes/images/*` en `web/public/images/{slug}.webp` + `{slug}.thumb.webp`, sortie gitignorée.
 - Accueil (`web/src/pages/index.astro`) — liste avec vignettes thumb, **recherche MiniSearch câblée** (titre ×3, ingrédients ×2, tags ×2, cuisine ×1, prefix+fuzzy), **chips fonctionnels** (all/rapide/vege/asiatique/francais/dessert, AND avec la recherche).
-- Vue recette (`web/src/pages/[slug].astro`) — deux colonnes desktop, image héro, ingrédients, ustensiles, étapes numérotées par section, aside Astuces, **portions dynamiques** (+/− scale en live), bouton Mode cuisson câblé. **Onglets sur mobile** (Ingrédients / Étapes / Ustensiles).
-- Mode cuisson (`web/src/pages/cuisson/[slug].astro`) — plein écran pas-à-pas, timers click-to-start + décompte MM:SS, Wake Lock.
-- Libs `web/src/lib/` : `scale`, `search`, `chips`, `cuisson` (flatten/timer/wake lock), `url` (withBase), `format` (formatUnit/formatQty avec pluralisation, pluralizeName pour ustensiles). Toutes testées unit.
-- Tests : **Vitest** pour le unit (~41 tests côté web + 24 tooling), **Playwright** pour le e2e (~15 specs). `pnpm test`, `pnpm test:e2e`.
+- Vue recette (`web/src/pages/[slug].astro`) — deux colonnes desktop, image héro, ingrédients cochables avec "Tout décocher" (persisté par slug), ustensiles, étapes numérotées avec timer pills cliquables, aside Astuces, **portions dynamiques** (+/− scale en live), bouton Mode cuisson câblé. **Onglets sur mobile** (Ingrédients / Étapes / Ustensiles).
+- Mode cuisson (`web/src/pages/cuisson/[slug].astro`) — plein écran pas-à-pas, pills timer statiques (cliquables pour alimenter le tray global), Wake Lock.
+- **Timer tray global** (`Base.astro` + `web/src/lib/timers.ts`) — click sur une pill démarre un timer persisté en localStorage avec id stable (`slug:sectionIdx:stepIdx:tokenIdx`), tick 1s, expire → blink + son `web/public/audio/timer-beep.mp3` une fois, dismiss via ✕, visible cross-page.
+- Libs `web/src/lib/` : `scale`, `search`, `chips`, `cuisson` (flatten/timer/wake lock), `url` (withBase), `format` (formatUnit/formatQty avec pluralisation, pluralizeName), `timers` (addTimer/removeTimer/remainingSeconds/isExpired). Toutes testées unit.
+- Tests : **Vitest** pour le unit (~52 tests côté web + 24 tooling), **Playwright** pour le e2e (18 specs). `pnpm test`, `pnpm test:e2e`.
 - **CI + deploy** : workflows GitHub Actions (`ci.yml`, `deploy.yml`). Deploy sur push main vers `/cuisine/` (piloté par `DEPLOY_BASE`).
 - **Dark mode** : auto via `prefers-color-scheme`, override manuel par bouton (`data-theme` persisté en localStorage, script inline dans `<head>` anti-flash).
 - Design tokens + composants CSS dans `web/src/styles/global.css`.
@@ -133,18 +142,20 @@ Route `/cuisson/[slug]`, plein écran, une étape à la fois (Précédent/Suivan
 
 ## Roadmap
 
-Faits (tout le périmètre web initial) :
+Faits (tout le périmètre web) :
 
 - [x] Portions dynamiques.
 - [x] MiniSearch câblé sur l'accueil.
 - [x] Filtres chips fonctionnels.
-- [x] Mode cuisson plein écran + timers click-to-start + Wake Lock.
+- [x] Mode cuisson plein écran + Wake Lock.
 - [x] Workflow GitHub Actions (CI + deploy Pages).
 - [x] Validateur `.cook` (metadata, enum, units, pluriels, image, empty).
 - [x] Dark mode (auto + toggle manuel persisté).
 - [x] Pipeline d'images au build (sharp, WebP + thumb).
 - [x] Refactor pluralisation (data singulier, UI pluralise).
 - [x] Onglets mobile sur la vue recette.
+- [x] Checklist ingrédients (cochable, persisté par slug).
+- [x] Timer tray global, stack, click-to-start depuis détail ou cuisson, persistance cross-page, son + blink à l'expiration.
 
 Reste à faire :
 
