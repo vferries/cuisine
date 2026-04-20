@@ -1,0 +1,96 @@
+---
+import Base from "../layouts/Base.astro";
+import indexData from "../generated/index.json";
+
+interface RecipeMeta {
+  slug: string;
+  title: string;
+  servings: number;
+  prepTime: number;
+  cookTime: number;
+  totalTime: number;
+  difficulty: string;
+  cuisine: string;
+  tags: string[];
+}
+
+const recipes: RecipeMeta[] = indexData.recipes;
+
+const cuisineToThumb: Record<string, string> = {
+  vietnamienne: "is-coral",
+  thaï: "is-coral",
+  chinoise: "is-coral",
+  italienne: "is-amber",
+  française: "is-pink",
+  japonaise: "is-gray",
+};
+const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
+---
+
+<Base title="Mes recettes">
+  <main class="shell">
+    <header class="home-header">
+      <p class="eyebrow">Cuisine</p>
+      <h1>Mes recettes</h1>
+    </header>
+
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input type="search" placeholder="Nom, ingrédient, tag…" aria-label="Rechercher une recette" />
+    </div>
+
+    <nav class="chips" aria-label="Filtres rapides">
+      <button class="chip is-active" type="button">Toutes</button>
+      <button class="chip" type="button">Rapide</button>
+      <button class="chip" type="button">Végé</button>
+      <button class="chip" type="button">Asiatique</button>
+      <button class="chip" type="button">Français</button>
+      <button class="chip" type="button">Dessert</button>
+    </nav>
+
+    <div class="count-row">
+      <span class="count">{recipes.length} recette{recipes.length > 1 ? "s" : ""}</span>
+      <button class="sort" type="button">
+        Récent
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+      </button>
+    </div>
+
+    <ul class="recipe-list">
+      {recipes.map((r) => (
+        <li class="recipe-row">
+          <a href={`/${r.slug}`}>
+            <div class={`thumb ${thumbClass(r.cuisine)}`}>
+              <svg width="36" height="36" viewBox="0 0 34 34" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 16 L30 16 Q29 27 17 28 Q5 27 4 16 Z" />
+                <path d="M12 12 Q13 9 12 6" opacity="0.5" />
+                <path d="M17 11 Q18 8 17 4" opacity="0.5" />
+                <path d="M22 12 Q23 9 22 6" opacity="0.5" />
+              </svg>
+            </div>
+            <div class="rec-content">
+              <p class="rec-tag">{r.cuisine}</p>
+              <h3 class="rec-title">{r.title}</h3>
+              <p class="rec-meta">
+                <span>{r.totalTime} min</span>
+                <span class="dot"></span>
+                <span>{r.servings} pers</span>
+                <span class="dot"></span>
+                <span>{r.difficulty}</span>
+              </p>
+            </div>
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    {recipes.length === 0 && (
+      <p class="muted" style="padding: 40px 0; text-align: center;">
+        Aucune recette pour l'instant. Ajoutes-en dans <code>recipes/</code> puis lance <code>pnpm build-index</code>.
+      </p>
+    )}
+  </main>
+</Base>
