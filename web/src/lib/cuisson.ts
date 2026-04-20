@@ -48,3 +48,23 @@ export function formatSecondsAsTime(seconds: number): string {
   const remaining = s % 60;
   return `${minutes}:${String(remaining).padStart(2, "0")}`;
 }
+
+interface WakeLockLike {
+  request(type: "screen"): Promise<unknown>;
+}
+
+interface NavigatorLike {
+  wakeLock?: WakeLockLike;
+}
+
+export async function acquireWakeLock(
+  nav: NavigatorLike,
+): Promise<unknown | null> {
+  const wakeLock = nav.wakeLock;
+  if (!wakeLock?.request) return null;
+  try {
+    return await wakeLock.request("screen");
+  } catch {
+    return null;
+  }
+}

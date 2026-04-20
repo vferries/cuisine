@@ -73,7 +73,9 @@ const steps = flattenSteps(recipe.sections);
 </Base>
 
 <script>
-  import { formatSecondsAsTime } from "../../lib/cuisson";
+  import { acquireWakeLock, formatSecondsAsTime } from "../../lib/cuisson";
+
+  acquireWakeLock(navigator);
 
   const stepEls = document.querySelectorAll<HTMLElement>(".cuisson-step");
   const currentEl = document.querySelector<HTMLElement>(

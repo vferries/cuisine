@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
+  acquireWakeLock,
   flattenSteps,
   formatSecondsAsTime,
   timerSeconds,
@@ -47,5 +48,31 @@ describe("formatSecondsAsTime", () => {
 
   it("formate 59 sec en 0:59", () => {
     expect(formatSecondsAsTime(59)).toBe("0:59");
+  });
+});
+
+describe("acquireWakeLock", () => {
+  it("retourne null quand l'API wakeLock n'est pas disponible", async () => {
+    expect(await acquireWakeLock({})).toBeNull();
+  });
+
+  it("appelle navigator.wakeLock.request('screen') et renvoie le sentinel", async () => {
+    const sentinel = { released: false };
+    const request = vi.fn(async () => sentinel);
+    const nav = { wakeLock: { request } };
+
+    const result = await acquireWakeLock(nav as any);
+
+    expect(request).toHaveBeenCalledWith("screen");
+    expect(result).toBe(sentinel);
+  });
+
+  it("retourne null si la requête est rejetée", async () => {
+    const request = vi.fn(async () => {
+      throw new Error("NotAllowed");
+    });
+    const nav = { wakeLock: { request } };
+
+    expect(await acquireWakeLock(nav as any)).toBeNull();
   });
 });
