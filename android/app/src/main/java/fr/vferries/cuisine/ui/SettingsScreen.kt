@@ -7,16 +7,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import fr.vferries.cuisine.ui.theme.ThemeMode
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,7 +32,9 @@ fun SettingsScreen(
             TopAppBar(
                 title = { Text("Réglages") },
                 navigationIcon = {
-                    TextButton(onClick = onBack) { Text("←") }
+                    IconButton(onClick = onBack) {
+                        Text("←", fontSize = 24.sp)
+                    }
                 },
             )
         },
@@ -49,7 +52,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .selectable(selected = m == mode, onClick = { onModeChange(m) })
-                        .padding(vertical = 4.dp),
+                        .padding(vertical = 12.dp),
                 ) {
                     RadioButton(selected = m == mode, onClick = null)
                     Text(

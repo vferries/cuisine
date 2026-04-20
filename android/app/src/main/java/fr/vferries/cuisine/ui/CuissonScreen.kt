@@ -7,14 +7,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -26,54 +28,89 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import fr.vferries.cuisine.data.FlatStep
 import fr.vferries.cuisine.data.Recipe
 import fr.vferries.cuisine.data.StepToken
 import fr.vferries.cuisine.data.flattenSteps
 import fr.vferries.cuisine.data.formatUnit
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CuissonScreen(
     state: RecipeState,
     onExit: () -> Unit,
 ) {
-    when (state) {
-        RecipeState.Loading -> Text(text = "Chargement…", modifier = Modifier.padding(16.dp))
-        is RecipeState.Error -> Text(text = "Erreur : ${state.message}", modifier = Modifier.padding(16.dp))
-        is RecipeState.Success -> CuissonContent(recipe = state.recipe, onExit = onExit)
+    val steps = (state as? RecipeState.Success)
+        ?.let { flattenSteps(it.recipe.sections) }
+        ?: emptyList()
+    var index by rememberSaveable(
+        (state as? RecipeState.Success)?.recipe?.slug ?: "loading",
+    ) { mutableIntStateOf(0) }
+    val clamped = if (steps.isEmpty()) 0 else index.coerceIn(0, steps.size - 1)
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    if (steps.isNotEmpty()) {
+                        Text("Étape ${clamped + 1} / ${steps.size}")
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onExit) {
+                        Text("←", fontSize = 24.sp)
+                    }
+                },
+            )
+        },
+    ) { padding ->
+        when (state) {
+            RecipeState.Loading -> Text(
+                text = "Chargement…",
+                modifier = Modifier.padding(padding).padding(16.dp),
+            )
+            is RecipeState.Error -> Text(
+                text = "Erreur : ${state.message}",
+                modifier = Modifier.padding(padding).padding(16.dp),
+            )
+            is RecipeState.Success -> {
+                if (steps.isEmpty()) {
+                    Text(
+                        text = "Aucune étape.",
+                        modifier = Modifier.padding(padding).padding(16.dp),
+                    )
+                } else {
+                    KeepScreenOn()
+                    CuissonStepBody(
+                        step = steps[clamped],
+                        contentPadding = padding,
+                        canPrev = clamped > 0,
+                        canNext = clamped < steps.size - 1,
+                        onPrev = { if (index > 0) index-- },
+                        onNext = { if (index < steps.size - 1) index++ },
+                    )
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun CuissonContent(recipe: Recipe, onExit: () -> Unit) {
-    val steps = remember(recipe.slug) { flattenSteps(recipe.sections) }
-    if (steps.isEmpty()) {
-        Text(text = "Aucune étape.", modifier = Modifier.padding(16.dp))
-        return
-    }
-
-    KeepScreenOn()
-
-    var index by rememberSaveable(recipe.slug) { mutableIntStateOf(0) }
-    val clamped = index.coerceIn(0, steps.size - 1)
-
+private fun CuissonStepBody(
+    step: FlatStep,
+    contentPadding: androidx.compose.foundation.layout.PaddingValues,
+    canPrev: Boolean,
+    canNext: Boolean,
+    onPrev: () -> Unit,
+    onNext: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .safeDrawingPadding()
+            .padding(contentPadding)
             .padding(16.dp),
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            TextButton(onClick = onExit) { Text("← Quitter") }
-            Text(
-                text = "Étape ${clamped + 1} / ${steps.size}",
-                modifier = Modifier.weight(1f),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            )
-        }
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -82,15 +119,14 @@ private fun CuissonContent(recipe: Recipe, onExit: () -> Unit) {
                 .padding(vertical = 16.dp),
             contentAlignment = Alignment.Center,
         ) {
-            val current = steps[clamped]
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = current.sectionName,
+                    text = step.sectionName,
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                 )
                 Text(
-                    text = current.renderText(),
+                    text = step.renderText(),
                     style = MaterialTheme.typography.headlineSmall,
                 )
             }
@@ -100,13 +136,13 @@ private fun CuissonContent(recipe: Recipe, onExit: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
         ) {
             OutlinedButton(
-                onClick = { if (index > 0) index-- },
-                enabled = clamped > 0,
+                onClick = onPrev,
+                enabled = canPrev,
                 modifier = Modifier.weight(1f),
             ) { Text("Précédent") }
             Button(
-                onClick = { if (index < steps.size - 1) index++ },
-                enabled = clamped < steps.size - 1,
+                onClick = onNext,
+                enabled = canNext,
                 modifier = Modifier.weight(1f),
             ) { Text("Suivant") }
         }

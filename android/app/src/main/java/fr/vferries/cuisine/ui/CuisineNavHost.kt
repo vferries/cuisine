@@ -52,6 +52,7 @@ fun CuisineNavHost(
             RecipeScreen(
                 state = state,
                 onStartCuisson = { nav.navigate("cuisson/$slug") },
+                onBack = { nav.popBackStack() },
             )
         }
         composable(
