@@ -19,7 +19,35 @@ const REQUIRED_METADATA = [
 
 const ALLOWED_DIFFICULTIES = new Set(["facile", "moyenne", "difficile"]);
 
-export function validateRecipe(source: string): ValidationResult {
+const ALLOWED_INGREDIENT_UNITS = new Set([
+  "g",
+  "kg",
+  "ml",
+  "l",
+  "càc",
+  "càs",
+  "pincée",
+  "pincées",
+  "brin",
+  "brins",
+  "bouquet",
+  "bouquets",
+  "sachet",
+  "sachets",
+  "gousse",
+  "gousses",
+]);
+
+const ALLOWED_TIMER_UNITS = new Set(["sec", "min", "h"]);
+
+export interface ValidateOptions {
+  imageExists?: (filename: string) => boolean;
+}
+
+export function validateRecipe(
+  source: string,
+  opts: ValidateOptions = {},
+): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -47,6 +75,42 @@ export function validateRecipe(source: string): ValidationResult {
     }
   }
 
+  const tags = (meta.tags ?? "").split(",").map((t) => t.trim()).filter(Boolean);
+  if (tags.length === 0) {
+    warnings.push(`metadata "tags" absent ou vide — nourrit la recherche et les chips`);
+  }
+
+  if (!meta.source) {
+    warnings.push(`metadata "source" absente — utile pour se rappeler d'où vient la recette`);
+  }
+
+  for (const ing of parsed.ingredients) {
+    if (ing.unit && !ALLOWED_INGREDIENT_UNITS.has(ing.unit)) {
+      warnings.push(
+        `unité inconnue "${ing.unit}" sur l'ingrédient "${ing.name}" (voir CONVENTIONS)`,
+      );
+    }
+  }
+
+  for (const timer of parsed.timers) {
+    if (timer.unit && !ALLOWED_TIMER_UNITS.has(timer.unit)) {
+      warnings.push(
+        `unité de timer inconnue "${timer.unit}" sur "${timer.name ?? "timer"}" (attendu: sec, min, h)`,
+      );
+    }
+  }
+
+  const totalSteps = parsed.sections.reduce((n, s) => n + s.steps.length, 0);
+  if (totalSteps === 0) {
+    errors.push(`aucune étape parsée — la recette est-elle vide ?`);
+  }
+
+  if (meta.image && opts.imageExists && !opts.imageExists(meta.image)) {
+    errors.push(
+      `image "${meta.image}" référencée mais fichier absent de recipes/images/`,
+    );
+  }
+
   return { errors, warnings };
 }
 
@@ -64,11 +128,21 @@ if (process.argv[1] === currentFile) {
   }
 
   const files = entries.filter((f) => f.endsWith(".cook"));
+
+  const IMAGES_DIR = path.join(RECIPES_DIR, "images");
+  let imageFiles: Set<string>;
+  try {
+    imageFiles = new Set(fs.readdirSync(IMAGES_DIR));
+  } catch {
+    imageFiles = new Set();
+  }
+  const imageExists = (name: string) => imageFiles.has(name);
+
   let failed = 0;
 
   for (const file of files) {
     const source = fs.readFileSync(path.join(RECIPES_DIR, file), "utf-8");
-    const { errors, warnings } = validateRecipe(source);
+    const { errors, warnings } = validateRecipe(source, { imageExists });
     if (errors.length || warnings.length) {
       console.log(`\n${file}`);
       for (const e of errors) console.error(`  ✗ ${e}`);
