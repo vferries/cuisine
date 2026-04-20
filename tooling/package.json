@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "build-index": "tsx src/build-index.ts",
+    "build-images": "tsx src/build-images.ts",
     "validate": "tsx src/validate-cook.ts",
     "test": "vitest run"
   },
   "devDependencies": {
+    "@types/node": "^22.7.0",
+    "sharp": "^0.34.5",
     "tsx": "^4.19.0",
-    "typescript": "^5.6.0",
-    "@types/node": "^22.7.0"
+    "typescript": "^5.6.0"
   }
 }

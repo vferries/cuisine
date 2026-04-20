@@ -5,12 +5,13 @@
   "description": "Recettes en Cooklang — site web + app Android",
   "scripts": {
     "build-index": "pnpm --filter @cuisine/tooling build-index",
+    "build-images": "pnpm --filter @cuisine/tooling build-images",
     "validate": "pnpm --filter @cuisine/tooling validate",
-    "dev": "pnpm build-index && pnpm --filter @cuisine/web dev",
-    "build": "pnpm build-index && pnpm --filter @cuisine/web build",
+    "dev": "pnpm build-index && pnpm build-images && pnpm --filter @cuisine/web dev",
+    "build": "pnpm build-index && pnpm build-images && pnpm --filter @cuisine/web build",
     "preview": "pnpm --filter @cuisine/web preview",
     "test": "pnpm -r --if-present test",
-    "test:e2e": "pnpm build-index && pnpm --filter @cuisine/web test:e2e"
+    "test:e2e": "pnpm build-index && pnpm build-images && pnpm --filter @cuisine/web test:e2e"
   },
   "engines": {
     "node": ">=20",

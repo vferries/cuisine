@@ -294,6 +294,13 @@ input {
 .thumb.is-amber { background: #faeeda; color: #854f0b; }
 .thumb.is-pink  { background: #fbeaf0; color: #72243e; }
 .thumb.is-gray  { background: #f1efe8; color: #5f5e5a; }
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  display: block;
+}
 
 .rec-content {
   flex: 1;
@@ -409,6 +416,13 @@ input {
   margin-bottom: 22px;
   background: var(--accent-tint);
   color: var(--accent-deep);
+  overflow: hidden;
+}
+.hero-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .portions {
