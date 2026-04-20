@@ -9,9 +9,13 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Button
@@ -45,6 +49,9 @@ import fr.vferries.cuisine.data.formatQty
 import fr.vferries.cuisine.data.formatUnit
 import fr.vferries.cuisine.data.pluralizeName
 import fr.vferries.cuisine.data.scaleQuantityText
+import fr.vferries.cuisine.data.timers.RunningTimer
+import fr.vferries.cuisine.data.timers.TimerRegistry
+import fr.vferries.cuisine.data.timers.timerDurationSeconds
 
 private enum class RecipeTab(val label: String) {
     INGREDIENTS("Ingrédients"),
@@ -149,7 +156,7 @@ private fun SuccessContent(recipe: Recipe, onStartCuisson: () -> Unit) {
                     store.set(recipe.slug, emptySet())
                 },
             )
-            RecipeTab.STEPS -> StepsTab(recipe = recipe)
+            RecipeTab.STEPS -> StepsTab(recipe = recipe, slug = recipe.slug)
             RecipeTab.COOKWARE -> CookwareTab(recipe = recipe)
         }
     }
@@ -198,17 +205,54 @@ private fun IngredientsTab(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun StepsTab(recipe: Recipe) {
+private fun StepsTab(recipe: Recipe, slug: String) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        recipe.sections.forEach { section ->
-            item { Text(text = section.name, style = MaterialTheme.typography.titleMedium) }
-            items(section.steps) { step ->
-                Text(text = step.renderText())
+        recipe.sections.forEachIndexed { sectionIdx, section ->
+            item(key = "section-$sectionIdx") {
+                Text(text = section.name, style = MaterialTheme.typography.titleMedium)
+            }
+            itemsIndexed(section.steps) { stepIdx, step ->
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    step.tokens.forEachIndexed { tokIdx, token ->
+                        when (token) {
+                            is StepToken.Text -> Text(text = token.text)
+                            is StepToken.IngredientToken -> Text(text = token.ingredient.name)
+                            is StepToken.CookwareToken -> Text(text = token.cookware.name)
+                            is StepToken.TimerToken -> {
+                                val seconds = timerDurationSeconds(token.timer.quantity, token.timer.unit)
+                                val label = buildString {
+                                    append(token.timer.quantity)
+                                    val u = formatUnit(token.timer.quantity, token.timer.unit)
+                                    if (u.isNotEmpty()) append(' ').append(u)
+                                }
+                                AssistChip(
+                                    onClick = {
+                                        if (seconds > 0) {
+                                            TimerRegistry.start(
+                                                RunningTimer(
+                                                    id = "$slug:$sectionIdx:$stepIdx:$tokIdx",
+                                                    name = token.timer.name ?: section.name,
+                                                    durationSeconds = seconds,
+                                                    startedAtMillis = System.currentTimeMillis(),
+                                                ),
+                                            )
+                                        }
+                                    },
+                                    label = { Text(label) },
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
         if (recipe.tips.isNotEmpty()) {

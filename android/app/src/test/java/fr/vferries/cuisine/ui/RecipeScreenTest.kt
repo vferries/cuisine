@@ -59,7 +59,9 @@ class RecipeScreenTest {
         composeRule.setContent { RecipeScreen(state = RecipeState.Success(recipe)) }
         composeRule.onNodeWithText("Étapes").performClick()
         composeRule.onNodeWithText("Préparation").assertIsDisplayed()
-        composeRule.onNodeWithText("Découper le porc en cubes.").assertIsDisplayed()
+        // Chaque token du step est un nœud séparé (FlowRow).
+        composeRule.onNodeWithText("Découper le ").assertIsDisplayed()
+        composeRule.onNodeWithText(" en cubes.").assertIsDisplayed()
     }
 
     @Test
