@@ -17,7 +17,7 @@ class MainActivityTest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun shows_Cuisine_title() {
-        composeRule.onNodeWithText("Cuisine").assertIsDisplayed()
+    fun shows_loading_state_on_start() {
+        composeRule.onNodeWithText("Chargement…").assertIsDisplayed()
     }
 }
