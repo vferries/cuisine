@@ -35,7 +35,22 @@ fun CuisineNavHost(repository: RecipeRepository) {
                 factory = factoryOf { RecipeViewModel(repository, slug) },
             )
             val state by vm.state.collectAsState()
-            RecipeScreen(state = state)
+            RecipeScreen(
+                state = state,
+                onStartCuisson = { nav.navigate("cuisson/$slug") },
+            )
+        }
+        composable(
+            route = "cuisson/{slug}",
+            arguments = listOf(navArgument("slug") { type = NavType.StringType }),
+        ) { entry ->
+            val slug = entry.arguments?.getString("slug").orEmpty()
+            val vm: RecipeViewModel = viewModel(
+                key = "cuisson-$slug",
+                factory = factoryOf { RecipeViewModel(repository, slug) },
+            )
+            val state by vm.state.collectAsState()
+            CuissonScreen(state = state, onExit = { nav.popBackStack() })
         }
     }
 }

@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Tab
@@ -52,7 +53,10 @@ private enum class RecipeTab(val label: String) {
 }
 
 @Composable
-fun RecipeScreen(state: RecipeState) {
+fun RecipeScreen(
+    state: RecipeState,
+    onStartCuisson: () -> Unit = {},
+) {
     when (state) {
         RecipeState.Loading -> Text(
             text = "Chargement…",
@@ -62,12 +66,12 @@ fun RecipeScreen(state: RecipeState) {
             text = "Erreur : ${state.message}",
             modifier = Modifier.padding(16.dp),
         )
-        is RecipeState.Success -> SuccessContent(state.recipe)
+        is RecipeState.Success -> SuccessContent(state.recipe, onStartCuisson)
     }
 }
 
 @Composable
-private fun SuccessContent(recipe: Recipe) {
+private fun SuccessContent(recipe: Recipe, onStartCuisson: () -> Unit) {
     val title = recipe.metadata["title"].orEmpty()
     val hasImage = recipe.metadata["image"]?.isNotBlank() == true
     val originalServings = recipe.metadata["servings"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
@@ -98,7 +102,14 @@ private fun SuccessContent(recipe: Recipe) {
                         .clip(RoundedCornerShape(14.dp)),
                 )
             }
-            Text(text = title, style = MaterialTheme.typography.headlineMedium)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.weight(1f),
+                )
+                Button(onClick = onStartCuisson) { Text("Mode cuisson") }
+            }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
