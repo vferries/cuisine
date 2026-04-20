@@ -118,13 +118,13 @@ describe("validateRecipe", () => {
     ).toBe(true);
   });
 
-  it("accepte les pluriels des unités de comptage", () => {
+  it("warn sur le pluriel d'une unité de comptage (data = singulier, UI pluralise)", () => {
     for (const unit of ["brins", "bouquets", "sachets", "gousses", "pincées"]) {
       const source = withStep(`Ajoutez @chose{2%${unit}}.`);
       const result = validateRecipe(source);
       expect(
         result.warnings.some((w) => w.includes("unité") && w.includes(unit)),
-      ).toBe(false);
+      ).toBe(true);
     }
   });
 

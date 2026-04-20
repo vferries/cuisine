@@ -19,12 +19,6 @@ export async function getStaticPaths() {
 const { recipe } = Astro.props;
 const meta = recipe.metadata as Record<string, string>;
 
-const unitDisplay: Record<string, string> = {
-  "càc": "c. à c.",
-  "càs": "c. à s.",
-};
-const formatUnit = (u?: string) => (u ? unitDisplay[u] ?? u : "");
-
 const steps = flattenSteps(recipe.sections);
 ---
 

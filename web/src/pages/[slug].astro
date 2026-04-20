@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import { formatQty, formatUnit, pluralizeName } from "../lib/format";
 import { withBase } from "../lib/url";
 
 export async function getStaticPaths() {
@@ -18,16 +19,6 @@ export async function getStaticPaths() {
 const { recipe } = Astro.props;
 const meta = recipe.metadata as Record<string, string>;
 
-const unitDisplay: Record<string, string> = {
-  "càc": "c. à c.",
-  "càs": "c. à s.",
-};
-const formatUnit = (u?: string) => (u ? unitDisplay[u] ?? u : "");
-const formatQty = (q: number | string | undefined, u?: string) => {
-  if (q === undefined || q === "") return null;
-  return `${q}${u ? " " + formatUnit(u) : ""}`;
-};
-
 // Pre-compute continuous step numbering across sections.
 const sectionsWithNumbers = recipe.sections.map(
   (section: any, sectionIdx: number) => {
@@ -40,9 +31,10 @@ const sectionsWithNumbers = recipe.sections.map(
 
 const cookwareSummary =
   recipe.cookware
-    ?.map((c: any) =>
-      Number(c.quantity) > 1 ? `${c.quantity} ${c.name}` : c.name,
-    )
+    ?.map((c: any) => {
+      const qty = Number(c.quantity);
+      return qty > 1 ? `${qty} ${pluralizeName(qty, c.name)}` : c.name;
+    })
     .join(", ") ?? "";
 
 const totalTime =
@@ -132,7 +124,7 @@ const totalTime =
                   <span
                     class="qty"
                     data-qty={hasNumericQty ? ing.quantity : undefined}
-                    data-unit={hasNumericQty ? formatUnit(ing.unit) : undefined}
+                    data-unit={hasNumericQty ? ing.unit : undefined}
                   >
                     {qty}
                   </span>
@@ -171,7 +163,7 @@ const totalTime =
                             <circle cx="12" cy="12" r="10" />
                             <polyline points="12 6 12 12 16 14" />
                           </svg>
-                          {tok.timer.quantity} {formatUnit(tok.timer.unit)}
+                          {tok.timer.quantity} {formatUnit(tok.timer.quantity, tok.timer.unit)}
                         </span>
                       );
                     }
@@ -197,6 +189,7 @@ const totalTime =
 </Base>
 
 <script>
+  import { formatQty } from "../lib/format";
   import { scaleQuantity } from "../lib/scale";
 
   const portions = document.querySelector<HTMLElement>(".portions");
@@ -215,9 +208,9 @@ const totalTime =
     const ratio = current / original;
     document.querySelectorAll<HTMLElement>(".qty[data-qty]").forEach((el) => {
       const base = Number(el.dataset.qty);
-      const unit = el.dataset.unit ?? "";
+      const unit = el.dataset.unit;
       const scaled = scaleQuantity(base, ratio);
-      el.textContent = unit ? `${scaled} ${unit}` : String(scaled);
+      el.textContent = formatQty(scaled, unit) ?? String(scaled);
     });
   }
 

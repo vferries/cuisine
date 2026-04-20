@@ -68,7 +68,7 @@ Métriques : `g`, `kg`, `ml`, `l`.
 Française courantes :
 - `càc` — cuillère à café (5 ml), rendue `c. à c.` dans l'UI.
 - `càs` — cuillère à soupe (15 ml), rendue `c. à s.`.
-- `pincée`, `brin`, `bouquet`, `sachet`, `gousse` — quantité de comptage, rendue tel quel. Pluriels acceptés (`brins`, `sachets`, etc.) pour l'usage naturel à qty > 1.
+- `pincée`, `brin`, `bouquet`, `sachet`, `gousse` — quantité de comptage. **Toujours au singulier dans les `.cook`** ; l'UI pluralise automatiquement à qty > 1. Le validator rejette les pluriels.
 
 ## Ustensiles
 

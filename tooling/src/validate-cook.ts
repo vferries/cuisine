@@ -27,15 +27,10 @@ const ALLOWED_INGREDIENT_UNITS = new Set([
   "càc",
   "càs",
   "pincée",
-  "pincées",
   "brin",
-  "brins",
   "bouquet",
-  "bouquets",
   "sachet",
-  "sachets",
   "gousse",
-  "gousses",
 ]);
 
 const ALLOWED_TIMER_UNITS = new Set(["sec", "min", "h"]);
