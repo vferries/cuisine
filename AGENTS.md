@@ -25,9 +25,9 @@ Deux workflows GitHub Actions dans `.github/workflows/` :
 
 Étapes de build détaillées :
 
-1. `tooling/src/validate-cook.ts` — valide chaque `.cook` (metadata requises, difficulty enum, servings entier positif). Exit 1 si erreur.
+1. `tooling/src/validate-cook.ts` — valide chaque `.cook`. Errors : metadata requises, difficulty enum, servings entier positif, aucune étape parsée, image référencée absente. Warnings : tags/source absents, unités d'ingrédient/timer hors liste autorisée. Exit 1 sur error.
 2. `tooling/src/build-index.ts` — parse chaque `.cook`, génère `web/src/generated/index.json` (métadonnées + tokens de recherche) + `web/src/generated/recipes/{slug}.json` (AST complet).
-3. (à implémenter) Optimise les images (thumbs WebP 320×240).
+3. `tooling/src/build-images.ts` — via `sharp`, convertit `recipes/images/*.{png,jpg,jpeg,webp}` en `web/public/images/{slug}.webp` (1024×768) + `{slug}.thumb.webp` (320×240), fit cover + q82.
 4. `astro build` produit `web/dist/`.
 5. `actions/deploy-pages@v4` publie sur GitHub Pages.
 
@@ -75,7 +75,7 @@ Définie en CSS variables dans `web/src/styles/global.css` :
 
 ### Layouts
 
-**Mobile (≤ 760px)** : stack. Titre, métadonnées, portions, puis onglets Ingrédients / Étapes / Ustensiles (à implémenter — actuellement tout est stacké).
+**Mobile (≤ 760px)** : stack. Titre, métadonnées, hero-thumb, portions, puis onglets Ingrédients / Étapes / Ustensiles (un seul panel visible à la fois, switch via nav.tabs role=tablist).
 
 **Desktop / tablette (> 760px)** : deux colonnes.
 
@@ -106,23 +106,21 @@ Route `/cuisson/[slug]`, plein écran, une étape à la fois (Précédent/Suivan
 - Scaffold pnpm workspace (root, `tooling/`, `web/`).
 - Parser Cooklang (`tooling/src/parser.ts`) — métadonnées, sections, ingrédients, ustensiles, timers. Agrège les duplications.
 - Build-index (`tooling/src/build-index.ts`) — `recipes/*.cook` → `web/src/generated/index.json` + `web/src/generated/recipes/{slug}.json`.
-- Validator (`tooling/src/validate-cook.ts`) — `pnpm validate` : metadata requises, difficulty ∈ enum, servings entier > 0. Exit 1 si erreur.
-- Accueil (`web/src/pages/index.astro`) — liste, **recherche MiniSearch câblée** (titre ×3, ingrédients ×2, tags ×2, cuisine ×1, prefix+fuzzy), **chips fonctionnels** (all/rapide/vege/asiatique/francais/dessert, AND avec la recherche).
-- Vue recette (`web/src/pages/[slug].astro`) — deux colonnes desktop, header, ingrédients, ustensiles, étapes numérotées par section, aside Astuces, **portions dynamiques** (+/− scale en live via `scaleQuantity`), bouton Mode cuisson câblé.
+- Validator étendu (`tooling/src/validate-cook.ts`) — errors : metadata requises, difficulty enum, servings > 0, aucune étape, image absente. Warnings : tags/source absents, unités hors liste, pluriels (pour guider vers singulier).
+- Image pipeline (`tooling/src/build-images.ts`) — sharp convertit `recipes/images/*` en `web/public/images/{slug}.webp` + `{slug}.thumb.webp`, sortie gitignorée.
+- Accueil (`web/src/pages/index.astro`) — liste avec vignettes thumb, **recherche MiniSearch câblée** (titre ×3, ingrédients ×2, tags ×2, cuisine ×1, prefix+fuzzy), **chips fonctionnels** (all/rapide/vege/asiatique/francais/dessert, AND avec la recherche).
+- Vue recette (`web/src/pages/[slug].astro`) — deux colonnes desktop, image héro, ingrédients, ustensiles, étapes numérotées par section, aside Astuces, **portions dynamiques** (+/− scale en live), bouton Mode cuisson câblé. **Onglets sur mobile** (Ingrédients / Étapes / Ustensiles).
 - Mode cuisson (`web/src/pages/cuisson/[slug].astro`) — plein écran pas-à-pas, timers click-to-start + décompte MM:SS, Wake Lock.
-- Libs `web/src/lib/` : `scale`, `search`, `chips`, `cuisson` (flatten/timer/wake lock), `url` (withBase). Toutes testées unit.
-- Tests : **Vitest** pour le unit (4 workspaces, ~27 tests), **Playwright** pour le e2e (8 specs). `pnpm test`, `pnpm test:e2e`.
+- Libs `web/src/lib/` : `scale`, `search`, `chips`, `cuisson` (flatten/timer/wake lock), `url` (withBase), `format` (formatUnit/formatQty avec pluralisation, pluralizeName pour ustensiles). Toutes testées unit.
+- Tests : **Vitest** pour le unit (~41 tests côté web + 24 tooling), **Playwright** pour le e2e (~15 specs). `pnpm test`, `pnpm test:e2e`.
 - **CI + deploy** : workflows GitHub Actions (`ci.yml`, `deploy.yml`). Deploy sur push main vers `/cuisine/` (piloté par `DEPLOY_BASE`).
+- **Dark mode** : auto via `prefers-color-scheme`, override manuel par bouton (`data-theme` persisté en localStorage, script inline dans `<head>` anti-flash).
 - Design tokens + composants CSS dans `web/src/styles/global.css`.
-- Une recette de référence : `recipes/porc-bigorre-caramel.cook`.
+- Une recette de référence : `recipes/porc-bigorre-caramel.cook` + image `recipes/images/porc-bigorre-caramel.png`.
 
 ### Ce qui ne fonctionne pas encore
 
-- **Dark mode** : non implémenté.
-- **Images réelles** : placeholder SVG partout. Prévu : `recipes/images/{slug}.webp` + thumbs 320×240 générés au build.
-- **Onglets mobile** sur la vue recette (≤ 760px stack actuellement, idéalement Ingrédients / Étapes / Ustensiles en onglets).
 - **Ustensiles dans la sidebar** : liste texte en ligne, pourrait mériter mieux.
-- **Validateur** : ne vérifie pas encore les unités autorisées (warning) ni l'existence des images.
 - **PWA / offline** : pas fait. Pas retenu pour l'instant (Android native choisi).
 - **App Android** : rien (dossier `android/` à créer).
 
@@ -135,22 +133,23 @@ Route `/cuisson/[slug]`, plein écran, une étape à la fois (Précédent/Suivan
 
 ## Roadmap
 
-Faits :
+Faits (tout le périmètre web initial) :
 
 - [x] Portions dynamiques.
 - [x] MiniSearch câblé sur l'accueil.
 - [x] Filtres chips fonctionnels.
 - [x] Mode cuisson plein écran + timers click-to-start + Wake Lock.
-- [x] Workflow GitHub Actions (CI + deploy Pages + validate sur PR).
+- [x] Workflow GitHub Actions (CI + deploy Pages).
+- [x] Validateur `.cook` (metadata, enum, units, pluriels, image, empty).
+- [x] Dark mode (auto + toggle manuel persisté).
+- [x] Pipeline d'images au build (sharp, WebP + thumb).
+- [x] Refactor pluralisation (data singulier, UI pluralise).
+- [x] Onglets mobile sur la vue recette.
 
-Reste à faire, dans l'ordre recommandé :
+Reste à faire :
 
-1. **Dark mode** via `prefers-color-scheme`.
-2. **Images réelles** + génération de thumbs au build.
-3. **Onglets mobile** sur la vue recette (Ingrédients / Étapes / Ustensiles).
-4. **Squelette Android** en Kotlin + Compose (sync depuis Pages au premier lancement).
-5. **Validateur étendu** : unités autorisées en warning, existence des images.
-6. **PWA offline** — si l'utilisateur change d'avis (Android reste prioritaire).
+1. **Squelette Android** en Kotlin + Compose (sync depuis Pages au premier lancement, cache Room ou fichiers).
+2. **PWA offline** — si l'utilisateur change d'avis (Android reste prioritaire).
 
 ## Conventions de code
 
