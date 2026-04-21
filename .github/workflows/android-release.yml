@@ -52,8 +52,24 @@ jobs:
           SIGNING_KEYSTORE_PASSWORD: ${{ secrets.SIGNING_KEYSTORE_PASSWORD }}
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
         run: |
-          keytool -list -keystore keystore/release.keystore -storepass "$SIGNING_KEYSTORE_PASSWORD" -alias "$SIGNING_KEY_ALIAS" > /dev/null
-          echo "keytool -list OK: keystore password and alias match the decoded keystore."
+          set +e
+          echo "--- Test 1: keystore password alone (lists all entries) ---"
+          keytool -list -keystore keystore/release.keystore -storepass "$SIGNING_KEYSTORE_PASSWORD" 2>&1
+          rc=$?
+          echo "Exit code: $rc"
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::Keystore password does not match the decoded keystore."
+            exit 1
+          fi
+          echo
+          echo "--- Test 2: alias exists in keystore ---"
+          keytool -list -keystore keystore/release.keystore -storepass "$SIGNING_KEYSTORE_PASSWORD" -alias "$SIGNING_KEY_ALIAS" 2>&1
+          rc=$?
+          echo "Exit code: $rc"
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::Alias '$SIGNING_KEY_ALIAS' not found in keystore."
+            exit 1
+          fi
 
       - name: Build release APK and AAB
         run: ./gradlew :app:assembleRelease :app:bundleRelease
