@@ -25,51 +25,10 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Check signing secrets
-        env:
-          SIGNING_KEYSTORE_B64: ${{ secrets.SIGNING_KEYSTORE_B64 }}
-          SIGNING_KEYSTORE_PASSWORD: ${{ secrets.SIGNING_KEYSTORE_PASSWORD }}
-          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
-        run: |
-          echo "SIGNING_KEYSTORE_B64 length:      ${#SIGNING_KEYSTORE_B64}"
-          echo "SIGNING_KEYSTORE_PASSWORD length: ${#SIGNING_KEYSTORE_PASSWORD}"
-          echo "SIGNING_KEY_ALIAS length:         ${#SIGNING_KEY_ALIAS}"
-          echo "SIGNING_KEY_PASSWORD length:      ${#SIGNING_KEY_PASSWORD}"
-          if [ -z "$SIGNING_KEYSTORE_B64" ] || [ -z "$SIGNING_KEYSTORE_PASSWORD" ] || [ -z "$SIGNING_KEY_ALIAS" ] || [ -z "$SIGNING_KEY_PASSWORD" ]; then
-            echo "::error::One or more signing secrets are empty — check repository secrets at Settings → Secrets and variables → Actions."
-            exit 1
-          fi
-
       - name: Decode keystore
         run: |
           mkdir -p keystore
           echo "${{ secrets.SIGNING_KEYSTORE_B64 }}" | base64 -d > keystore/release.keystore
-          echo "Keystore file size: $(wc -c < keystore/release.keystore) bytes"
-
-      - name: Verify keystore password with keytool
-        env:
-          SIGNING_KEYSTORE_PASSWORD: ${{ secrets.SIGNING_KEYSTORE_PASSWORD }}
-          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
-        run: |
-          set +e
-          echo "--- Test 1: keystore password alone (lists all entries) ---"
-          keytool -list -keystore keystore/release.keystore -storepass "$SIGNING_KEYSTORE_PASSWORD" 2>&1
-          rc=$?
-          echo "Exit code: $rc"
-          if [ "$rc" -ne 0 ]; then
-            echo "::error::Keystore password does not match the decoded keystore."
-            exit 1
-          fi
-          echo
-          echo "--- Test 2: alias exists in keystore ---"
-          keytool -list -keystore keystore/release.keystore -storepass "$SIGNING_KEYSTORE_PASSWORD" -alias "$SIGNING_KEY_ALIAS" 2>&1
-          rc=$?
-          echo "Exit code: $rc"
-          if [ "$rc" -ne 0 ]; then
-            echo "::error::Alias '$SIGNING_KEY_ALIAS' not found in keystore."
-            exit 1
-          fi
 
       - name: Build release APK and AAB
         run: ./gradlew :app:assembleRelease :app:bundleRelease
