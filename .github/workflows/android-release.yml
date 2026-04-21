@@ -30,8 +30,8 @@ jobs:
           mkdir -p keystore
           echo "${{ secrets.SIGNING_KEYSTORE_B64 }}" | base64 -d > keystore/release.keystore
 
-      - name: Assemble release APK
-        run: ./gradlew :app:assembleRelease
+      - name: Build release APK and AAB
+        run: ./gradlew :app:assembleRelease :app:bundleRelease
         env:
           SIGNING_KEYSTORE_PASSWORD: ${{ secrets.SIGNING_KEYSTORE_PASSWORD }}
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
@@ -40,5 +40,7 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          files: android/app/build/outputs/apk/release/*.apk
+          files: |
+            android/app/build/outputs/apk/release/*.apk
+            android/app/build/outputs/bundle/release/*.aab
           generate_release_notes: true
