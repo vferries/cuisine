@@ -36,10 +36,20 @@ import fr.vferries.cuisine.data.timers.formatRemaining
 import fr.vferries.cuisine.data.timers.isExpired
 import fr.vferries.cuisine.data.timers.remainingSeconds
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+
+/**
+ * Décale verticalement le tray pour ne pas chevaucher la barre d'actions
+ * de l'écran courant (typiquement Mode cuisson). Lu par TimerTrayOverlay.
+ */
+object TimerTrayPlacement {
+    val bottomInsetDp = MutableStateFlow(0)
+}
 
 @Composable
 fun TimerTrayOverlay() {
     val timers by TimerRegistry.state.collectAsState()
+    val bottomInset by TimerTrayPlacement.bottomInsetDp.collectAsState()
 
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) {
@@ -59,7 +69,7 @@ fun TimerTrayOverlay() {
         Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(12.dp),
+                .padding(end = 12.dp, top = 12.dp, bottom = (12 + bottomInset).dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             timers.forEach { t -> TimerItem(t, now) }

@@ -94,6 +94,7 @@ fun CuissonScreen(
                     )
                 } else {
                     KeepScreenOn()
+                    LiftTimerTray()
                     CuissonStepBody(
                         step = steps[clamped],
                         slug = state.recipe.slug,
@@ -213,6 +214,14 @@ private fun KeepScreenOn() {
     DisposableEffect(Unit) {
         view.keepScreenOn = true
         onDispose { view.keepScreenOn = false }
+    }
+}
+
+@Composable
+private fun LiftTimerTray() {
+    DisposableEffect(Unit) {
+        TimerTrayPlacement.bottomInsetDp.value = 80
+        onDispose { TimerTrayPlacement.bottomInsetDp.value = 0 }
     }
 }
 
