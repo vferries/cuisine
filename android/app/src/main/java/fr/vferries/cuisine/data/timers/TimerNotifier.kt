@@ -38,8 +38,16 @@ class TimerNotifier(context: Context) {
     }
 
     private fun ensureChannel() {
-        if (nm.getNotificationChannel(CHANNEL_ID) != null) return
-        val sound = Uri.parse("android.resource://${appContext.packageName}/${R.raw.timer_beep}")
+        val sound = Uri.parse("android.resource://${appContext.packageName}/raw/timer_beep")
+        val existing = nm.getNotificationChannel(CHANNEL_ID)
+        if (existing != null && existing.sound != null) {
+            Log.d(TAG, "channel exists, sound=${existing.sound}")
+            return
+        }
+        if (existing != null) {
+            Log.d(TAG, "channel exists but sound is null — recreating")
+            nm.deleteNotificationChannel(CHANNEL_ID)
+        }
         val attrs = AudioAttributes.Builder()
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .setUsage(AudioAttributes.USAGE_ALARM)
@@ -54,6 +62,7 @@ class TimerNotifier(context: Context) {
             enableVibration(true)
         }
         nm.createNotificationChannel(channel)
+        Log.d(TAG, "channel created sound=$sound")
     }
 
     companion object {
