@@ -3,8 +3,6 @@ package fr.vferries.cuisine.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,7 +11,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,7 +29,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import fr.vferries.cuisine.data.FlatStep
 import fr.vferries.cuisine.data.Recipe
@@ -110,7 +115,6 @@ fun CuissonScreen(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CuissonStepBody(
     step: FlatStep,
@@ -121,8 +125,8 @@ private fun CuissonStepBody(
     onPrev: () -> Unit,
     onNext: () -> Unit,
 ) {
-    val timerTokens = step.tokens
-        .mapIndexedNotNull { idx, t -> (t as? StepToken.TimerToken)?.let { idx to it } }
+    val linkColor = MaterialTheme.colorScheme.primary
+    val annotated = stepAnnotatedString(step, slug = slug, linkColor = linkColor)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -143,43 +147,7 @@ private fun CuissonStepBody(
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                 )
-                Text(
-                    text = step.renderText(),
-                    style = MaterialTheme.typography.headlineSmall,
-                )
-                if (timerTokens.isNotEmpty()) {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        timerTokens.forEach { (tokIdx, token) ->
-                            val seconds = timerDurationSeconds(
-                                token.timer.quantity,
-                                token.timer.unit,
-                            )
-                            val label = buildString {
-                                append(token.timer.quantity)
-                                val u = formatUnit(token.timer.quantity, token.timer.unit)
-                                if (u.isNotEmpty()) append(' ').append(u)
-                            }
-                            AssistChip(
-                                onClick = {
-                                    if (seconds > 0) {
-                                        TimerRegistry.start(
-                                            RunningTimer(
-                                                id = "$slug:${step.sectionIdx}:${step.stepIdx}:$tokIdx",
-                                                name = token.timer.name ?: step.sectionName,
-                                                durationSeconds = seconds,
-                                                startedAtMillis = System.currentTimeMillis(),
-                                            ),
-                                        )
-                                    }
-                                },
-                                label = { Text(label) },
-                            )
-                        }
-                    }
-                }
+                Text(text = annotated, style = MaterialTheme.typography.headlineSmall)
             }
         }
         Row(
@@ -200,19 +168,48 @@ private fun CuissonStepBody(
     }
 }
 
-private fun FlatStep.renderText(): String =
-    tokens.joinToString("") { token ->
+internal fun stepAnnotatedString(
+    step: FlatStep,
+    slug: String,
+    linkColor: Color,
+): AnnotatedString = buildAnnotatedString {
+    val linkStyles = TextLinkStyles(
+        style = SpanStyle(color = linkColor, fontWeight = FontWeight.SemiBold),
+    )
+    step.tokens.forEachIndexed { tokIdx, token ->
         when (token) {
-            is StepToken.Text -> token.text
-            is StepToken.IngredientToken -> token.ingredient.name
-            is StepToken.CookwareToken -> token.cookware.name
-            is StepToken.TimerToken -> buildString {
-                append(token.timer.quantity)
-                val u = formatUnit(token.timer.quantity, token.timer.unit)
-                if (u.isNotEmpty()) append(' ').append(u)
+            is StepToken.Text -> append(token.text)
+            is StepToken.IngredientToken -> append(token.ingredient.name)
+            is StepToken.CookwareToken -> append(token.cookware.name)
+            is StepToken.TimerToken -> {
+                val seconds = timerDurationSeconds(token.timer.quantity, token.timer.unit)
+                val label = buildString {
+                    append(token.timer.quantity)
+                    val u = formatUnit(token.timer.quantity, token.timer.unit)
+                    if (u.isNotEmpty()) append(' ').append(u)
+                }
+                if (seconds > 0) {
+                    val link = LinkAnnotation.Clickable(
+                        tag = "timer:$tokIdx",
+                        styles = linkStyles,
+                    ) {
+                        TimerRegistry.start(
+                            RunningTimer(
+                                id = "$slug:${step.sectionIdx}:${step.stepIdx}:$tokIdx",
+                                name = token.timer.name ?: step.sectionName,
+                                durationSeconds = seconds,
+                                startedAtMillis = System.currentTimeMillis(),
+                            ),
+                        )
+                    }
+                    withLink(link) { append(label) }
+                } else {
+                    append(label)
+                }
             }
         }
     }
+}
 
 @Composable
 private fun KeepScreenOn() {
