@@ -1,0 +1,60 @@
+package fr.vferries.cuisine.data.timers
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.media.AudioAttributes
+import android.net.Uri
+import androidx.core.app.NotificationCompat
+import fr.vferries.cuisine.R
+
+/**
+ * Poste les notifications d'expiration de timer.
+ * Le son et la priorité sont portés par le channel ; à l'expiration, l'OS joue
+ * le beep même si l'app n'est plus en RAM.
+ */
+class TimerNotifier(context: Context) {
+
+    private val appContext: Context = context.applicationContext
+    private val nm: NotificationManager =
+        appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+    init {
+        ensureChannel()
+    }
+
+    fun notifyExpired(id: String, name: String) {
+        val title = if (name.isNotBlank()) "$name terminé" else "Timer terminé"
+        val notif = NotificationCompat.Builder(appContext, CHANNEL_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(title)
+            .setAutoCancel(true)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .build()
+        nm.notify(id.hashCode(), notif)
+    }
+
+    private fun ensureChannel() {
+        if (nm.getNotificationChannel(CHANNEL_ID) != null) return
+        val sound = Uri.parse("android.resource://${appContext.packageName}/${R.raw.timer_beep}")
+        val attrs = AudioAttributes.Builder()
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .setUsage(AudioAttributes.USAGE_ALARM)
+            .build()
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "Timers de cuisson",
+            NotificationManager.IMPORTANCE_HIGH,
+        ).apply {
+            description = "Bip à l'expiration d'un timer de cuisson"
+            setSound(sound, attrs)
+            enableVibration(true)
+        }
+        nm.createNotificationChannel(channel)
+    }
+
+    companion object {
+        const val CHANNEL_ID = "timers"
+    }
+}

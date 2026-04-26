@@ -21,7 +21,7 @@ class TimerScheduler(context: Context) {
 
     fun schedule(timer: RunningTimer) {
         val triggerAt = timer.startedAtMillis + timer.durationSeconds * 1000L
-        val pi = pendingIntentFor(timer.id, create = true)!!
+        val pi = pendingIntentFor(timer, create = true)!!
         if (canScheduleExact()) {
             alarms.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)
         } else {
@@ -30,7 +30,7 @@ class TimerScheduler(context: Context) {
     }
 
     fun cancel(id: String) {
-        val pi = pendingIntentFor(id, create = false) ?: return
+        val pi = pendingIntentForId(id, create = false) ?: return
         alarms.cancel(pi)
         pi.cancel()
     }
@@ -38,10 +38,21 @@ class TimerScheduler(context: Context) {
     private fun canScheduleExact(): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarms.canScheduleExactAlarms()
 
-    private fun pendingIntentFor(id: String, create: Boolean): PendingIntent? {
+    private fun pendingIntentFor(timer: RunningTimer, create: Boolean): PendingIntent? {
         val intent = Intent(appContext, TimerExpirationReceiver::class.java).apply {
             action = ACTION_FIRE
-            putExtra(EXTRA_TIMER_ID, id)
+            putExtra(EXTRA_TIMER_ID, timer.id)
+            putExtra(EXTRA_TIMER_NAME, timer.name)
+            putExtra(EXTRA_TIMER_END_TIME, timer.startedAtMillis + timer.durationSeconds * 1000L)
+        }
+        val flags = (if (create) PendingIntent.FLAG_UPDATE_CURRENT else PendingIntent.FLAG_NO_CREATE) or
+            PendingIntent.FLAG_IMMUTABLE
+        return PendingIntent.getBroadcast(appContext, timer.id.hashCode(), intent, flags)
+    }
+
+    private fun pendingIntentForId(id: String, create: Boolean): PendingIntent? {
+        val intent = Intent(appContext, TimerExpirationReceiver::class.java).apply {
+            action = ACTION_FIRE
         }
         val flags = (if (create) PendingIntent.FLAG_UPDATE_CURRENT else PendingIntent.FLAG_NO_CREATE) or
             PendingIntent.FLAG_IMMUTABLE
@@ -51,5 +62,7 @@ class TimerScheduler(context: Context) {
     companion object {
         const val ACTION_FIRE = "fr.vferries.cuisine.timer.FIRE"
         const val EXTRA_TIMER_ID = "timer_id"
+        const val EXTRA_TIMER_NAME = "timer_name"
+        const val EXTRA_TIMER_END_TIME = "timer_end_time"
     }
 }
