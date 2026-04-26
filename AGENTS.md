@@ -96,6 +96,14 @@ Timer tray fixe (bas-droite), monté dans `Base.astro`, visible sur toutes les p
 
 À l'expiration (remaining ≤ 0) : animation `timer-blink` (alterne tint ↔ accent, 0.9s infinite), son `web/public/audio/timer-beep.mp3` joué **une fois** par transition (Set `notified` en mémoire session). Dismiss via ✕ retire l'item du storage et du Set notified.
 
+### Timers Android (système)
+
+Côté Android, le tray Compose n'est qu'un miroir de l'état persisté — la **vérité** vit dans `AlarmManager`. `TimerRegistry.start(t)` appelle `TimerScheduler.schedule(t)` qui programme une alarme exacte (`setExactAndAllowWhileIdle`, RTC_WAKEUP) ciblée sur `TimerExpirationReceiver`. Le timer survit donc au kill de l'app : l'OS réveille le device et tire le receiver, qui poste une notification high-importance via `TimerNotifier` sur le channel `timers` (son `R.raw.timer_beep`, vibration). Le son n'est plus joué côté Compose pour éviter le double bip — la notif système est l'unique source.
+
+Permissions : `SCHEDULE_EXACT_ALARM` (déclarée au manifest, non auto-grantée sur targetSdk 31+, l'écran Réglages propose un bouton qui ouvre `ACTION_REQUEST_SCHEDULE_EXACT_ALARM` ; fallback sur `setAndAllowWhileIdle` inexact si refusée). `POST_NOTIFICATIONS` est demandée à `MainActivity.onCreate` sur Android 13+.
+
+Pas de **foreground service** : pas besoin, AlarmManager est conçu pour ce cas. Le service foreground a été écarté comme overkill.
+
 ### Checklist ingrédients
 
 Click sur un `<li>` d'ingrédient toggle `.is-checked` (strike-through + dim 45%, check pill corail). Persisté par recette (`localStorage["ingredients-checked:{slug}"]`). Bouton "Tout décocher" dans le panel-header. Indépendant du changement de portions (décoche pas automatiquement).
@@ -158,13 +166,13 @@ Faits (tout le périmètre web) :
 - [x] Timer tray global, stack, click-to-start depuis détail ou cuisson, persistance cross-page, son + blink à l'expiration.
 - [x] App Android Kotlin + Compose Material3 en parité fonctionnelle : liste (vignette Coil + cuisine/durée/pers/difficulté), recherche, chips, détail avec hero collapsing, onglets Ingrédients/Étapes/Ustensiles, portions sticky, checklist, mode cuisson pas-à-pas avec Wake Lock, timer tray global avec son + clignotement, dark mode auto + toggle dans Settings, cache Room avec fallback offline.
 - [x] Release pipeline Android : workflow `android-release.yml` déclenché sur tag `v*.*.*`, APK signé uploadé en GitHub Release.
+- [x] Timers Android fiables : AlarmManager + BroadcastReceiver + notification système. Survivent au kill de l'app. Onboarding `SCHEDULE_EXACT_ALARM` dans Réglages.
 
 Reste à faire :
 
 1. **Favoris** (web + Android) avec chip "Favoris".
-2. **Service foreground pour les timers Android** (survivre au kill de l'app pendant la cuisson).
-3. **Liste de courses** agrégée multi-recettes.
-4. **PWA offline** — si l'utilisateur change d'avis.
+2. **Liste de courses** agrégée multi-recettes.
+3. **PWA offline** — si l'utilisateur change d'avis.
 
 ### Setup release Android (one-time)
 

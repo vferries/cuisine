@@ -1,6 +1,5 @@
 package fr.vferries.cuisine.ui
 
-import android.media.MediaPlayer
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -24,16 +23,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import fr.vferries.cuisine.R
 import fr.vferries.cuisine.data.timers.RunningTimer
 import fr.vferries.cuisine.data.timers.TimerRegistry
 import fr.vferries.cuisine.data.timers.formatRemaining
@@ -44,16 +40,6 @@ import kotlinx.coroutines.delay
 @Composable
 fun TimerTrayOverlay() {
     val timers by TimerRegistry.state.collectAsState()
-    val context = LocalContext.current
-
-    // Timers déjà notifiés (son joué une fois). Pré-rempli avec les expirés au
-    // chargement pour qu'un timer qui a expiré pendant une session précédente
-    // ne bippe pas en rouvrant l'app.
-    val notified = remember {
-        mutableStateOf(
-            timers.filter { it.isExpired(System.currentTimeMillis()) }.map { it.id }.toSet(),
-        )
-    }
 
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) {
@@ -61,19 +47,6 @@ fun TimerTrayOverlay() {
             delay(1000)
             now = System.currentTimeMillis()
         }
-    }
-
-    // Détecter les transitions running → expired et jouer le beep une fois.
-    LaunchedEffect(timers, now) {
-        val freshlyExpired = timers.filter { it.isExpired(now) && it.id !in notified.value }
-        if (freshlyExpired.isNotEmpty()) {
-            playBeep(context)
-            notified.value = notified.value + freshlyExpired.map { it.id }
-        }
-        // Nettoyer les ids qui ne sont plus dans la liste (dismiss).
-        val currentIds = timers.map { it.id }.toSet()
-        val stale = notified.value - currentIds
-        if (stale.isNotEmpty()) notified.value = notified.value - stale
     }
 
     if (timers.isEmpty()) return
@@ -134,13 +107,5 @@ private fun TimerItem(t: RunningTimer, now: Long) {
         IconButton(onClick = { TimerRegistry.stop(t.id) }) {
             Text(text = "✕", color = fg)
         }
-    }
-}
-
-private fun playBeep(context: android.content.Context) {
-    runCatching {
-        val mp = MediaPlayer.create(context, R.raw.timer_beep) ?: return
-        mp.setOnCompletionListener { it.release() }
-        mp.start()
     }
 }
