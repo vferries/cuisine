@@ -14,13 +14,16 @@ import kotlinx.serialization.json.Json
  */
 object TimerRegistry {
     private var prefs: SharedPreferences? = null
+    private var scheduler: TimerScheduler? = null
     private val fmt = Json { ignoreUnknownKeys = true }
     private val _state = MutableStateFlow<List<RunningTimer>>(emptyList())
     val state: StateFlow<List<RunningTimer>> = _state.asStateFlow()
 
     fun init(context: Context) {
         if (prefs != null) return
-        prefs = context.applicationContext.getSharedPreferences("timers", Context.MODE_PRIVATE)
+        val app = context.applicationContext
+        prefs = app.getSharedPreferences("timers", Context.MODE_PRIVATE)
+        scheduler = TimerScheduler(app)
         _state.value = read()
     }
 
@@ -29,11 +32,13 @@ object TimerRegistry {
         if (_state.value.any { it.id == timer.id }) return
         _state.value = _state.value + timer
         persist()
+        scheduler?.schedule(timer)
     }
 
     fun stop(id: String) {
         _state.value = _state.value.filterNot { it.id == id }
         persist()
+        scheduler?.cancel(id)
     }
 
     private fun read(): List<RunningTimer> {
