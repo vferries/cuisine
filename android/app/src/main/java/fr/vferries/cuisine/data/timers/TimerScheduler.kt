@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 
 /**
  * Programme un broadcast à l'expiration d'un timer via AlarmManager.
@@ -22,11 +23,17 @@ class TimerScheduler(context: Context) {
     fun schedule(timer: RunningTimer) {
         val triggerAt = timer.startedAtMillis + timer.durationSeconds * 1000L
         val pi = pendingIntentFor(timer, create = true)!!
-        if (canScheduleExact()) {
+        val exact = canScheduleExact()
+        if (exact) {
             alarms.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)
         } else {
             alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)
         }
+        Log.d(
+            TAG,
+            "schedule id=${timer.id} name='${timer.name}' triggerAt=$triggerAt " +
+                "now=${System.currentTimeMillis()} exact=$exact",
+        )
     }
 
     fun cancel(id: String) {
@@ -64,5 +71,6 @@ class TimerScheduler(context: Context) {
         const val EXTRA_TIMER_ID = "timer_id"
         const val EXTRA_TIMER_NAME = "timer_name"
         const val EXTRA_TIMER_END_TIME = "timer_end_time"
+        private const val TAG = "Cuisine.Timers"
     }
 }

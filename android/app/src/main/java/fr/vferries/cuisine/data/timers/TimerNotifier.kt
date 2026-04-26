@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.media.AudioAttributes
 import android.net.Uri
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import fr.vferries.cuisine.R
 
@@ -26,13 +27,14 @@ class TimerNotifier(context: Context) {
     fun notifyExpired(id: String, name: String) {
         val title = if (name.isNotBlank()) "$name terminé" else "Timer terminé"
         val notif = NotificationCompat.Builder(appContext, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_timer_notification)
             .setContentTitle(title)
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
         nm.notify(id.hashCode(), notif)
+        Log.d(TAG, "notifyExpired posted id=$id name='$name'")
     }
 
     private fun ensureChannel() {
@@ -56,5 +58,6 @@ class TimerNotifier(context: Context) {
 
     companion object {
         const val CHANNEL_ID = "timers"
+        private const val TAG = "Cuisine.Timers"
     }
 }
