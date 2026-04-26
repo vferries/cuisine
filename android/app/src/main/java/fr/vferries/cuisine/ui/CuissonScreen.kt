@@ -121,6 +121,8 @@ private fun CuissonStepBody(
     onPrev: () -> Unit,
     onNext: () -> Unit,
 ) {
+    val timerTokens = step.tokens
+        .mapIndexedNotNull { idx, t -> (t as? StepToken.TimerToken)?.let { idx to it } }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -135,56 +137,46 @@ private fun CuissonStepBody(
                 .padding(vertical = 16.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     text = step.sectionName,
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                 )
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    step.tokens.forEachIndexed { tokIdx, token ->
-                        when (token) {
-                            is StepToken.Text -> Text(
-                                text = token.text,
-                                style = MaterialTheme.typography.headlineSmall,
+                Text(
+                    text = step.renderText(),
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                if (timerTokens.isNotEmpty()) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        timerTokens.forEach { (tokIdx, token) ->
+                            val seconds = timerDurationSeconds(
+                                token.timer.quantity,
+                                token.timer.unit,
                             )
-                            is StepToken.IngredientToken -> Text(
-                                text = token.ingredient.name,
-                                style = MaterialTheme.typography.headlineSmall,
-                            )
-                            is StepToken.CookwareToken -> Text(
-                                text = token.cookware.name,
-                                style = MaterialTheme.typography.headlineSmall,
-                            )
-                            is StepToken.TimerToken -> {
-                                val seconds = timerDurationSeconds(
-                                    token.timer.quantity,
-                                    token.timer.unit,
-                                )
-                                val label = buildString {
-                                    append(token.timer.quantity)
-                                    val u = formatUnit(token.timer.quantity, token.timer.unit)
-                                    if (u.isNotEmpty()) append(' ').append(u)
-                                }
-                                AssistChip(
-                                    onClick = {
-                                        if (seconds > 0) {
-                                            TimerRegistry.start(
-                                                RunningTimer(
-                                                    id = "$slug:${step.sectionIdx}:${step.stepIdx}:$tokIdx",
-                                                    name = token.timer.name ?: step.sectionName,
-                                                    durationSeconds = seconds,
-                                                    startedAtMillis = System.currentTimeMillis(),
-                                                ),
-                                            )
-                                        }
-                                    },
-                                    label = { Text(label) },
-                                )
+                            val label = buildString {
+                                append(token.timer.quantity)
+                                val u = formatUnit(token.timer.quantity, token.timer.unit)
+                                if (u.isNotEmpty()) append(' ').append(u)
                             }
+                            AssistChip(
+                                onClick = {
+                                    if (seconds > 0) {
+                                        TimerRegistry.start(
+                                            RunningTimer(
+                                                id = "$slug:${step.sectionIdx}:${step.stepIdx}:$tokIdx",
+                                                name = token.timer.name ?: step.sectionName,
+                                                durationSeconds = seconds,
+                                                startedAtMillis = System.currentTimeMillis(),
+                                            ),
+                                        )
+                                    }
+                                },
+                                label = { Text(label) },
+                            )
                         }
                     }
                 }
@@ -207,6 +199,20 @@ private fun CuissonStepBody(
         }
     }
 }
+
+private fun FlatStep.renderText(): String =
+    tokens.joinToString("") { token ->
+        when (token) {
+            is StepToken.Text -> token.text
+            is StepToken.IngredientToken -> token.ingredient.name
+            is StepToken.CookwareToken -> token.cookware.name
+            is StepToken.TimerToken -> buildString {
+                append(token.timer.quantity)
+                val u = formatUnit(token.timer.quantity, token.timer.unit)
+                if (u.isNotEmpty()) append(' ').append(u)
+            }
+        }
+    }
 
 @Composable
 private fun KeepScreenOn() {
