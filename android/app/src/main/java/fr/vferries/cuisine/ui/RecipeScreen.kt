@@ -16,10 +16,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import android.content.Intent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -63,6 +65,7 @@ import coil.compose.AsyncImage
 import fr.vferries.cuisine.data.Recipe
 import fr.vferries.cuisine.data.StepToken
 import fr.vferries.cuisine.data.Urls
+import fr.vferries.cuisine.data.buildShareIntent
 import fr.vferries.cuisine.data.checklist.ChecklistStore
 import fr.vferries.cuisine.data.favorites.FavoritesStore
 import fr.vferries.cuisine.data.formatQty
@@ -77,6 +80,23 @@ private enum class RecipeTab(val label: String) {
     INGREDIENTS("Ingrédients"),
     STEPS("Étapes"),
     COOKWARE("Ustensiles"),
+}
+
+@Composable
+private fun ShareButton(title: String, slug: String) {
+    val context = LocalContext.current
+    IconButton(
+        onClick = {
+            val intent = buildShareIntent(title = title, url = Urls.recipeUrl(slug))
+            context.startActivity(Intent.createChooser(intent, null))
+        },
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Share,
+            contentDescription = "Partager la recette",
+            tint = MaterialTheme.colorScheme.primary,
+        )
+    }
 }
 
 @Composable
@@ -140,6 +160,10 @@ fun RecipeScreen(
                 },
                 actions = {
                     if (state is RecipeState.Success) {
+                        ShareButton(
+                            title = state.recipe.metadata["title"].orEmpty(),
+                            slug = state.recipe.slug,
+                        )
                         FavoriteToggle(slug = state.recipe.slug)
                         Button(
                             onClick = onStartCuisson,

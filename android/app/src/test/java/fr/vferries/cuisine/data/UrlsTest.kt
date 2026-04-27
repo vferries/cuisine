@@ -15,4 +15,12 @@ class UrlsTest {
             Urls.heroUrl("porc"),
         )
     }
+
+    @Test
+    fun recipe_url_points_to_pages_slug() {
+        assertEquals(
+            "https://vferries.github.io/cuisine/porc",
+            Urls.recipeUrl("porc"),
+        )
+    }
 }

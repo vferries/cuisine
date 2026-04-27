@@ -81,6 +81,12 @@ class RecipeScreenTest {
     }
 
     @Test
+    fun share_button_is_displayed_in_top_bar() {
+        composeRule.setContent { RecipeScreen(state = RecipeState.Success(recipe)) }
+        composeRule.onNodeWithContentDescription("Partager la recette").assertIsDisplayed()
+    }
+
+    @Test
     fun favorite_button_toggles_label_and_persists() {
         composeRule.setContent { RecipeScreen(state = RecipeState.Success(recipe)) }
         composeRule.onNodeWithContentDescription("Marquer comme favori").assertIsDisplayed()
