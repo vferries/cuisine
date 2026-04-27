@@ -440,6 +440,26 @@ input {
   fill: var(--accent);
 }
 
+.share-btn {
+  height: 42px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--rule-strong);
+  background: var(--paper);
+  color: var(--ink-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.share-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 .tabs {
   display: none;
 }
