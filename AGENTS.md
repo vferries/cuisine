@@ -124,11 +124,11 @@ Click sur un `<li>` d'ingrédient toggle `.is-checked` (strike-through + dim 45%
 - Build-index (`tooling/src/build-index.ts`) — `recipes/*.cook` → `web/src/generated/index.json` + `web/src/generated/recipes/{slug}.json`.
 - Validator étendu (`tooling/src/validate-cook.ts`) — errors : metadata requises, difficulty enum, servings > 0, aucune étape, image absente. Warnings : tags/source absents, unités hors liste, pluriels (pour guider vers singulier).
 - Image pipeline (`tooling/src/build-images.ts`) — sharp convertit `recipes/images/*` en `web/public/images/{slug}.webp` + `{slug}.thumb.webp`, sortie gitignorée.
-- Accueil (`web/src/pages/index.astro`) — liste avec vignettes thumb, **recherche MiniSearch câblée** (titre ×3, ingrédients ×2, tags ×2, cuisine ×1, prefix+fuzzy), **chips fonctionnels** (all/rapide/vege/asiatique/francais/dessert, AND avec la recherche).
+- Accueil (`web/src/pages/index.astro`) — liste avec vignettes thumb, **recherche MiniSearch câblée** (titre ×3, ingrédients ×2, tags ×2, cuisine ×1, prefix+fuzzy), **chips fonctionnels** (all/favoris/rapide/vege/asiatique/francais/dessert, AND avec la recherche), **cœur favoris** sur chaque carte.
 - Vue recette (`web/src/pages/[slug].astro`) — deux colonnes desktop, image héro, ingrédients cochables avec "Tout décocher" (persisté par slug), ustensiles, étapes numérotées avec timer pills cliquables, aside Astuces, **portions dynamiques** (+/− scale en live), bouton Mode cuisson câblé. **Onglets sur mobile** (Ingrédients / Étapes / Ustensiles).
 - Mode cuisson (`web/src/pages/cuisson/[slug].astro`) — plein écran pas-à-pas, pills timer statiques (cliquables pour alimenter le tray global), Wake Lock.
 - **Timer tray global** (`Base.astro` + `web/src/lib/timers.ts`) — click sur une pill démarre un timer persisté en localStorage avec id stable (`slug:sectionIdx:stepIdx:tokenIdx`), tick 1s, expire → blink + son `web/public/audio/timer-beep.mp3` une fois, dismiss via ✕, visible cross-page.
-- Libs `web/src/lib/` : `scale`, `search`, `chips`, `cuisson` (flatten/timer/wake lock), `url` (withBase), `format` (formatUnit/formatQty avec pluralisation, pluralizeName), `timers` (addTimer/removeTimer/remainingSeconds/isExpired). Toutes testées unit.
+- Libs `web/src/lib/` : `scale`, `search`, `chips`, `cuisson` (flatten/timer/wake lock), `url` (withBase), `format` (formatUnit/formatQty avec pluralisation, pluralizeName), `timers` (addTimer/removeTimer/remainingSeconds/isExpired), `favorites` (read/write/toggle/isFavorite, key `favorites` en localStorage). Toutes testées unit.
 - Tests : **Vitest** pour le unit (~52 tests côté web + 24 tooling), **Playwright** pour le e2e (18 specs). `pnpm test`, `pnpm test:e2e`.
 - **CI + deploy** : workflows GitHub Actions (`ci.yml`, `deploy.yml`). Deploy sur push main vers `/cuisine/` (piloté par `DEPLOY_BASE`).
 - **Dark mode** : auto via `prefers-color-scheme`, override manuel par bouton (`data-theme` persisté en localStorage, script inline dans `<head>` anti-flash).
@@ -170,7 +170,7 @@ Faits (tout le périmètre web) :
 
 Reste à faire :
 
-1. **Favoris** (web + Android) avec chip "Favoris".
+1. **Favoris Android** — parité du cœur (page liste + détail) + DataStore. Côté web c'est fait (lib `favorites.ts`, cœur sur détail et carte d'accueil, chip "Favoris").
 2. **Liste de courses** agrégée multi-recettes.
 3. **PWA offline** — si l'utilisateur change d'avis.
 

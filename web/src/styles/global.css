@@ -264,6 +264,24 @@ input {
 }
 .recipe-row {
   border-bottom: 0.5px solid var(--rule);
+  position: relative;
+}
+.favorite-toggle.is-card {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+}
+.favorite-toggle.is-card:hover {
+  background: transparent;
+}
+.favorite-toggle.is-card[aria-pressed="true"] {
+  background: transparent;
+  border: none;
 }
 .recipe-row a {
   display: flex;
@@ -387,6 +405,40 @@ input {
   flex-shrink: 0;
 }
 .cta-cuisson:hover { background: var(--accent); }
+
+.header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.favorite-toggle {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--rule-strong);
+  background: var(--paper);
+  color: var(--ink-soft);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  padding: 0;
+}
+.favorite-toggle:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.favorite-toggle[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-tint);
+  border-color: var(--accent);
+}
+.favorite-toggle[aria-pressed="true"] svg {
+  fill: var(--accent);
+}
 
 .tabs {
   display: none;

@@ -59,4 +59,14 @@ describe("filterByChip", () => {
       "tarte-tatin",
     ]);
   });
+
+  it("chip 'favoris' ne retient que les recettes dont le slug est marqué favori", () => {
+    expect(
+      filterByChip([porc, salade, tarte], "favoris", { favorites: ["tarte-tatin", "porc-bigorre-caramel"] }),
+    ).toEqual(["porc-bigorre-caramel", "tarte-tatin"]);
+  });
+
+  it("chip 'favoris' retourne [] si aucun favori connu", () => {
+    expect(filterByChip([porc, salade, tarte], "favoris", { favorites: [] })).toEqual([]);
+  });
 });
