@@ -169,13 +169,10 @@ Faits (tout le périmètre web) :
 - [x] Timers Android fiables : AlarmManager + BroadcastReceiver + notification système. Survivent au kill de l'app. Onboarding `SCHEDULE_EXACT_ALARM` dans Réglages.
 - [x] Favoris (web + Android) : `FavoritesStore` SharedPrefs côté Android (clé `favorites`, mirroir de `ChecklistStore`), `lib/favorites.ts` localStorage côté web. Cœur sur la carte d'accueil et la page détail, chip "Favoris" intégré au filtrage AND avec la recherche.
 
-Reste à faire :
-
-1. **PWA offline** — si l'utilisateur change d'avis.
-
 Pas retenu :
 
 - **Liste de courses** agrégée multi-recettes — la checklist par recette couvre le besoin réel ; ajouter un écran dédié alourdirait l'app pour un usage trop marginal.
+- **PWA offline** — l'app Android native couvre déjà le besoin offline en mobilité ; pas de cas d'usage desktop sans réseau.
 
 ### Setup release Android (one-time)
 
