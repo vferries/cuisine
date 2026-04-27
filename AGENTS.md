@@ -169,6 +169,13 @@ Faits (tout le périmètre web) :
 - [x] Timers Android fiables : AlarmManager + BroadcastReceiver + notification système. Survivent au kill de l'app. Onboarding `SCHEDULE_EXACT_ALARM` dans Réglages.
 - [x] Favoris (web + Android) : `FavoritesStore` SharedPrefs côté Android (clé `favorites`, mirroir de `ChecklistStore`), `lib/favorites.ts` localStorage côté web. Cœur sur la carte d'accueil et la page détail, chip "Favoris" intégré au filtrage AND avec la recherche.
 
+Reste à faire (par ordre d'utilité décroissante) :
+
+1. **Activer le bouton "Récent"** sur l'accueil — il est dans le DOM mais inerte. Tri par `updatedAt`, avec alternance "Alphabétique". Prendra son sens à 50+ recettes.
+2. **Bouton "Au hasard"** sur l'accueil — pour les soirs sans inspiration. Petit, dans le ton cookbook, zéro nouvel écran. À porter aussi côté Android.
+3. **Afficher le champ `source`** sur la page recette — il existe dans les metadata (le validateur warn si absent) mais n'est rendu nulle part.
+4. **Feuille d'impression dédiée** (`@media print`) — masquer nav, CTA, onglets ; imprimer ingrédients + étapes proprement.
+
 Pas retenu :
 
 - **Liste de courses** agrégée multi-recettes — la checklist par recette couvre le besoin réel ; ajouter un écran dédié alourdirait l'app pour un usage trop marginal.
