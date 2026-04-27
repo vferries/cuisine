@@ -171,8 +171,11 @@ Faits (tout le périmètre web) :
 
 Reste à faire :
 
-1. **Liste de courses** agrégée multi-recettes.
-2. **PWA offline** — si l'utilisateur change d'avis.
+1. **PWA offline** — si l'utilisateur change d'avis.
+
+Pas retenu :
+
+- **Liste de courses** agrégée multi-recettes — la checklist par recette couvre le besoin réel ; ajouter un écran dédié alourdirait l'app pour un usage trop marginal.
 
 ### Setup release Android (one-time)
 
