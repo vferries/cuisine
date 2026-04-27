@@ -1,9 +1,15 @@
 package fr.vferries.cuisine.ui
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.test.core.app.ApplicationProvider
 import fr.vferries.cuisine.data.RecipeMeta
+import fr.vferries.cuisine.data.favorites.FavoritesStore
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -56,5 +62,39 @@ class HomeScreenTest {
             HomeScreen(state = HomeState.Error("Oups"))
         }
         composeRule.onNodeWithText("Erreur : Oups").assertIsDisplayed()
+    }
+
+    @Before
+    fun resetFavorites() {
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        FavoritesStore.from(ctx).clear()
+    }
+
+    @Test
+    fun favoris_chip_filters_to_favorited_recipes_only() {
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        FavoritesStore.from(ctx).toggle("a")
+
+        val recipes = listOf(meta("a", "Recette A"), meta("b", "Recette B"))
+        composeRule.setContent { HomeScreen(state = HomeState.Success(recipes)) }
+
+        composeRule.onNodeWithText("Recette A").assertIsDisplayed()
+        composeRule.onNodeWithText("Recette B").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Favoris").performClick()
+
+        composeRule.onNodeWithText("Recette A").assertIsDisplayed()
+        composeRule.onNodeWithText("Recette B").assertIsNotDisplayed()
+    }
+
+    @Test
+    fun row_heart_toggles_favorite_state() {
+        val recipes = listOf(meta("a", "Recette A"))
+        composeRule.setContent { HomeScreen(state = HomeState.Success(recipes)) }
+
+        composeRule.onAllNodesWithContentDescription("Marquer Recette A comme favori")[0].performClick()
+
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        org.junit.Assert.assertTrue(FavoritesStore.from(ctx).contains("a"))
     }
 }

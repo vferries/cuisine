@@ -167,12 +167,12 @@ Faits (tout le périmètre web) :
 - [x] App Android Kotlin + Compose Material3 en parité fonctionnelle : liste (vignette Coil + cuisine/durée/pers/difficulté), recherche, chips, détail avec hero collapsing, onglets Ingrédients/Étapes/Ustensiles, portions sticky, checklist, mode cuisson pas-à-pas avec Wake Lock, timer tray global avec son + clignotement, dark mode auto + toggle dans Settings, cache Room avec fallback offline.
 - [x] Release pipeline Android : workflow `android-release.yml` déclenché sur tag `v*.*.*`, APK signé uploadé en GitHub Release.
 - [x] Timers Android fiables : AlarmManager + BroadcastReceiver + notification système. Survivent au kill de l'app. Onboarding `SCHEDULE_EXACT_ALARM` dans Réglages.
+- [x] Favoris (web + Android) : `FavoritesStore` SharedPrefs côté Android (clé `favorites`, mirroir de `ChecklistStore`), `lib/favorites.ts` localStorage côté web. Cœur sur la carte d'accueil et la page détail, chip "Favoris" intégré au filtrage AND avec la recherche.
 
 Reste à faire :
 
-1. **Favoris Android** — parité du cœur (page liste + détail) + DataStore. Côté web c'est fait (lib `favorites.ts`, cœur sur détail et carte d'accueil, chip "Favoris").
-2. **Liste de courses** agrégée multi-recettes.
-3. **PWA offline** — si l'utilisateur change d'avis.
+1. **Liste de courses** agrégée multi-recettes.
+2. **PWA offline** — si l'utilisateur change d'avis.
 
 ### Setup release Android (one-time)
 

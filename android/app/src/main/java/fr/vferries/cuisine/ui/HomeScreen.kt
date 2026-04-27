@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -39,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,6 +49,7 @@ import coil.compose.AsyncImage
 import fr.vferries.cuisine.data.ChipKey
 import fr.vferries.cuisine.data.RecipeMeta
 import fr.vferries.cuisine.data.Urls
+import fr.vferries.cuisine.data.favorites.FavoritesStore
 import fr.vferries.cuisine.data.filterByChip
 import fr.vferries.cuisine.data.matchingRecipeSlugs
 
@@ -106,12 +110,19 @@ private fun SuccessList(
     contentPadding: PaddingValues,
     onRecipeClick: (String) -> Unit,
 ) {
+    val context = LocalContext.current
+    val store = remember { FavoritesStore.from(context) }
+    var favorites by remember { mutableStateOf(store.get()) }
     var query by rememberSaveable { mutableStateOf("") }
     var chip by rememberSaveable { mutableStateOf(ChipKey.ALL) }
-    val filtered = remember(recipes, query, chip) {
+    val filtered = remember(recipes, query, chip, favorites) {
         val bySearch = matchingRecipeSlugs(recipes, query).toSet()
-        val byChip = filterByChip(recipes, chip).toSet()
+        val byChip = filterByChip(recipes, chip, favorites).toSet()
         recipes.filter { it.slug in bySearch && it.slug in byChip }
+    }
+    val toggleFavorite: (String) -> Unit = { slug ->
+        store.toggle(slug)
+        favorites = store.get()
     }
     LazyColumn(
         modifier = Modifier
@@ -152,13 +163,23 @@ private fun SuccessList(
             }
         }
         items(filtered, key = { it.slug }) { recipe ->
-            RecipeRow(recipe = recipe, onClick = { onRecipeClick(recipe.slug) })
+            RecipeRow(
+                recipe = recipe,
+                isFavorite = recipe.slug in favorites,
+                onClick = { onRecipeClick(recipe.slug) },
+                onToggleFavorite = { toggleFavorite(recipe.slug) },
+            )
         }
     }
 }
 
 @Composable
-private fun RecipeRow(recipe: RecipeMeta, onClick: () -> Unit) {
+private fun RecipeRow(
+    recipe: RecipeMeta,
+    isFavorite: Boolean,
+    onClick: () -> Unit,
+    onToggleFavorite: () -> Unit,
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -213,6 +234,17 @@ private fun RecipeRow(recipe: RecipeMeta, onClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+        }
+        IconButton(onClick = onToggleFavorite) {
+            Icon(
+                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                contentDescription = if (isFavorite) {
+                    "Retirer ${recipe.title} des favoris"
+                } else {
+                    "Marquer ${recipe.title} comme favori"
+                },
+                tint = MaterialTheme.colorScheme.primary,
+            )
         }
     }
 }

@@ -18,6 +18,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -62,6 +64,7 @@ import fr.vferries.cuisine.data.Recipe
 import fr.vferries.cuisine.data.StepToken
 import fr.vferries.cuisine.data.Urls
 import fr.vferries.cuisine.data.checklist.ChecklistStore
+import fr.vferries.cuisine.data.favorites.FavoritesStore
 import fr.vferries.cuisine.data.formatQty
 import fr.vferries.cuisine.data.formatUnit
 import fr.vferries.cuisine.data.pluralizeName
@@ -74,6 +77,25 @@ private enum class RecipeTab(val label: String) {
     INGREDIENTS("Ingrédients"),
     STEPS("Étapes"),
     COOKWARE("Ustensiles"),
+}
+
+@Composable
+private fun FavoriteToggle(slug: String) {
+    val context = LocalContext.current
+    val store = remember { FavoritesStore.from(context) }
+    var isFavorite by remember(slug) { mutableStateOf(store.contains(slug)) }
+    IconButton(
+        onClick = {
+            store.toggle(slug)
+            isFavorite = store.contains(slug)
+        },
+    ) {
+        Icon(
+            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+            contentDescription = if (isFavorite) "Retirer des favoris" else "Marquer comme favori",
+            tint = MaterialTheme.colorScheme.primary,
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -118,6 +140,7 @@ fun RecipeScreen(
                 },
                 actions = {
                     if (state is RecipeState.Success) {
+                        FavoriteToggle(slug = state.recipe.slug)
                         Button(
                             onClick = onStartCuisson,
                             modifier = Modifier.padding(end = 8.dp),

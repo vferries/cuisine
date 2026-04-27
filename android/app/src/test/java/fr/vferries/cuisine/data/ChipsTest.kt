@@ -53,4 +53,26 @@ class ChipsTest {
     @Test fun dessert_filters_on_tag() {
         assertEquals(listOf("tarte"), filterByChip(listOf(porc, salade, tarte), ChipKey.DESSERT))
     }
+
+    @Test fun favoris_filters_on_provided_set() {
+        assertEquals(
+            listOf("porc", "tarte"),
+            filterByChip(
+                listOf(porc, salade, tarte),
+                ChipKey.FAVORIS,
+                favorites = setOf("porc", "tarte"),
+            ),
+        )
+    }
+
+    @Test fun favoris_returns_empty_when_no_favorites() {
+        assertEquals(
+            emptyList<String>(),
+            filterByChip(
+                listOf(porc, salade, tarte),
+                ChipKey.FAVORIS,
+                favorites = emptySet(),
+            ),
+        )
+    }
 }

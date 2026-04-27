@@ -2,6 +2,7 @@ package fr.vferries.cuisine.data
 
 enum class ChipKey(val label: String) {
     ALL("Toutes"),
+    FAVORIS("Favoris"),
     RAPIDE("Rapide"),
     VEGE("Végé"),
     ASIATIQUE("Asiatique"),
@@ -18,7 +19,14 @@ private val predicates: Map<ChipKey, (RecipeMeta) -> Boolean> = mapOf(
     ChipKey.DESSERT to { r -> "dessert" in r.tags },
 )
 
-fun filterByChip(recipes: List<RecipeMeta>, chip: ChipKey): List<String> {
+fun filterByChip(
+    recipes: List<RecipeMeta>,
+    chip: ChipKey,
+    favorites: Set<String> = emptySet(),
+): List<String> {
+    if (chip == ChipKey.FAVORIS) {
+        return recipes.filter { it.slug in favorites }.map { it.slug }
+    }
     val predicate = predicates.getValue(chip)
     return recipes.filter(predicate).map { it.slug }
 }

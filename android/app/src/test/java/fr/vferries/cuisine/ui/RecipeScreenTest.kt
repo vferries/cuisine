@@ -2,8 +2,12 @@ package fr.vferries.cuisine.ui
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.test.core.app.ApplicationProvider
+import fr.vferries.cuisine.data.favorites.FavoritesStore
+import org.junit.Before
 import fr.vferries.cuisine.data.Ingredient
 import fr.vferries.cuisine.data.Recipe
 import fr.vferries.cuisine.data.Section
@@ -68,5 +72,22 @@ class RecipeScreenTest {
     fun loading_state_shows_loading_label() {
         composeRule.setContent { RecipeScreen(state = RecipeState.Loading) }
         composeRule.onNodeWithText("Chargement…").assertIsDisplayed()
+    }
+
+    @Before
+    fun resetFavorites() {
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        FavoritesStore.from(ctx).clear()
+    }
+
+    @Test
+    fun favorite_button_toggles_label_and_persists() {
+        composeRule.setContent { RecipeScreen(state = RecipeState.Success(recipe)) }
+        composeRule.onNodeWithContentDescription("Marquer comme favori").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Marquer comme favori").performClick()
+        composeRule.onNodeWithContentDescription("Retirer des favoris").assertIsDisplayed()
+
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        org.junit.Assert.assertTrue(FavoritesStore.from(ctx).contains("porc"))
     }
 }
