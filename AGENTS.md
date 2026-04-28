@@ -122,7 +122,7 @@ Click sur un `<li>` d'ingrédient toggle `.is-checked` (strike-through + dim 45%
 - Scaffold pnpm workspace (root, `tooling/`, `web/`).
 - Parser Cooklang (`tooling/src/parser.ts`) — métadonnées, sections, ingrédients, ustensiles, timers. Agrège les duplications.
 - Build-index (`tooling/src/build-index.ts`) — `recipes/*.cook` → `web/src/generated/index.json` + `web/src/generated/recipes/{slug}.json`.
-- Validator étendu (`tooling/src/validate-cook.ts`) — errors : metadata requises, difficulty enum, servings > 0, aucune étape, image absente. Warnings : tags/source absents, unités hors liste, pluriels (pour guider vers singulier).
+- Validator étendu (`tooling/src/validate-cook.ts`) — errors : metadata requises (dont `course`), difficulty et course enum, servings > 0, aucune étape, image absente. Warnings : tags/source absents, unités hors liste, pluriels (pour guider vers singulier).
 - Image pipeline (`tooling/src/build-images.ts`) — sharp convertit `recipes/images/*` en `web/public/images/{slug}.webp` + `{slug}.thumb.webp`, sortie gitignorée.
 - Accueil (`web/src/pages/index.astro`) — liste avec vignettes thumb, **recherche MiniSearch câblée** (titre ×3, ingrédients ×2, tags ×2, cuisine ×1, prefix+fuzzy), **chips fonctionnels** (all/favoris/rapide/vege/asiatique/francais/dessert, AND avec la recherche), **cœur favoris** sur chaque carte.
 - Vue recette (`web/src/pages/[slug].astro`) — deux colonnes desktop, image héro, ingrédients cochables avec "Tout décocher" (persisté par slug), ustensiles, étapes numérotées avec timer pills cliquables, aside Astuces, **portions dynamiques** (+/− scale en live), bouton Mode cuisson câblé. **Onglets sur mobile** (Ingrédients / Étapes / Ustensiles).

@@ -15,9 +15,12 @@ const REQUIRED_METADATA = [
   "cook time",
   "difficulty",
   "cuisine",
+  "course",
 ] as const;
 
 const ALLOWED_DIFFICULTIES = new Set(["facile", "moyenne", "difficile"]);
+
+const ALLOWED_COURSES = new Set(["entrée", "plat", "dessert"]);
 
 const ALLOWED_INGREDIENT_UNITS = new Set([
   "g",
@@ -58,6 +61,12 @@ export function validateRecipe(
   if (meta.difficulty && !ALLOWED_DIFFICULTIES.has(meta.difficulty)) {
     errors.push(
       `metadata "difficulty" invalide: "${meta.difficulty}" (attendu: facile, moyenne, difficile)`,
+    );
+  }
+
+  if (meta.course && !ALLOWED_COURSES.has(meta.course)) {
+    errors.push(
+      `metadata "course" invalide: "${meta.course}" (attendu: entrée, plat, dessert)`,
     );
   }
 

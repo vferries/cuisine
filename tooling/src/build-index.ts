@@ -19,6 +19,7 @@ interface RecipeMeta {
   totalTime: number;
   difficulty: string;
   cuisine: string;
+  course: string;
   region?: string;
   tags: string[];
   image?: string;
@@ -97,6 +98,7 @@ async function main() {
         totalTime: prepTime + cookTime,
         difficulty: meta.difficulty ?? "moyenne",
         cuisine: meta.cuisine ?? "",
+        course: meta.course ?? "",
         region: meta.region,
         tags: parseTags(meta.tags),
         image: meta.image,

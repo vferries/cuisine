@@ -7,19 +7,33 @@ const validRecipe = `>> title: Recette test
 >> cook time: 20 min
 >> difficulty: facile
 >> cuisine: française
+>> course: plat
 
 Une étape.`;
 
 describe("validateRecipe", () => {
-  it("renvoie 0 erreur pour une recette avec les 6 metadata requises", () => {
+  it("renvoie 0 erreur pour une recette avec les 7 metadata requises", () => {
     const result = validateRecipe(validRecipe);
     expect(result.errors).toEqual([]);
   });
 
   it("signale chaque metadata requise manquante", () => {
     const result = validateRecipe("");
-    for (const key of ["title", "servings", "prep time", "cook time", "difficulty", "cuisine"]) {
+    for (const key of ["title", "servings", "prep time", "cook time", "difficulty", "cuisine", "course"]) {
       expect(result.errors.some((e) => e.includes(key))).toBe(true);
+    }
+  });
+
+  it("rejette une course hors de l'énum {entrée, plat, dessert}", () => {
+    const source = validRecipe.replace("course: plat", "course: boisson");
+    const result = validateRecipe(source);
+    expect(result.errors.some((e) => e.includes("course"))).toBe(true);
+  });
+
+  it("accepte les trois valeurs valides de course", () => {
+    for (const c of ["entrée", "plat", "dessert"]) {
+      const source = validRecipe.replace("course: plat", `course: ${c}`);
+      expect(validateRecipe(source).errors).toEqual([]);
     }
   });
 

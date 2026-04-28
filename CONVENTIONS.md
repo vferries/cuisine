@@ -25,6 +25,7 @@ Syntaxe : `>> clé: valeur`, une par ligne, tout en haut du fichier avant toute 
 | `cook time` | durée | `25 min` |
 | `difficulty` | enum | `facile` · `moyenne` · `difficile` |
 | `cuisine` | texte (féminin singulier) | `vietnamienne`, `italienne`, `française` |
+| `course` | enum | `entrée` · `plat` · `dessert` |
 
 ### Optionnelles
 
