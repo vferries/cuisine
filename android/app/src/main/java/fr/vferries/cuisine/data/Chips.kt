@@ -16,7 +16,7 @@ private val predicates: Map<ChipKey, (RecipeMeta) -> Boolean> = mapOf(
     ChipKey.VEGE to { r -> "végé" in r.tags },
     ChipKey.ASIATIQUE to { r -> "asiatique" in r.tags },
     ChipKey.FRANCAIS to { r -> r.cuisine == "française" },
-    ChipKey.DESSERT to { r -> "dessert" in r.tags },
+    ChipKey.DESSERT to { r -> r.course == "dessert" || "dessert" in r.tags },
 )
 
 fun filterByChip(
@@ -29,4 +29,34 @@ fun filterByChip(
     }
     val predicate = predicates.getValue(chip)
     return recipes.filter(predicate).map { it.slug }
+}
+
+enum class Course(val label: String, val value: String) {
+    ENTREE("Entrée", "entrée"),
+    PLAT("Plat", "plat"),
+    DESSERT("Dessert", "dessert");
+}
+
+fun filterByCourse(recipes: List<RecipeMeta>, course: Course?): List<String> {
+    if (course == null) return recipes.map { it.slug }
+    return recipes.filter { it.course == course.value }.map { it.slug }
+}
+
+enum class Difficulty(val label: String, val value: String) {
+    FACILE("Facile", "facile"),
+    MOYENNE("Moyenne", "moyenne"),
+    DIFFICILE("Difficile", "difficile");
+}
+
+fun filterByDifficulty(
+    recipes: List<RecipeMeta>,
+    difficulty: Difficulty?,
+): List<String> {
+    if (difficulty == null) return recipes.map { it.slug }
+    return recipes.filter { it.difficulty == difficulty.value }.map { it.slug }
+}
+
+fun filterBySansGluten(recipes: List<RecipeMeta>, active: Boolean): List<String> {
+    if (!active) return recipes.map { it.slug }
+    return recipes.filter { "sans gluten" in it.tags }.map { it.slug }
 }

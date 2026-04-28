@@ -97,4 +97,21 @@ class HomeScreenTest {
         val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
         org.junit.Assert.assertTrue(FavoritesStore.from(ctx).contains("a"))
     }
+
+    @Test
+    fun advanced_panel_toggle_reveals_course_filter() {
+        composeRule.setContent { HomeScreen(state = HomeState.Success(emptyList())) }
+
+        composeRule.onNodeWithText("Entrée").assertDoesNotExist()
+        composeRule.onNodeWithText("Plat").assertDoesNotExist()
+        composeRule.onNodeWithText("Tri").assertDoesNotExist()
+
+        composeRule.onNodeWithText("Filtres avancés").performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Entrée").assertExists()
+        composeRule.onNodeWithText("Plat").assertExists()
+        composeRule.onNodeWithText("Récent").assertExists()
+        composeRule.onNodeWithText("Sans gluten").assertExists()
+    }
 }

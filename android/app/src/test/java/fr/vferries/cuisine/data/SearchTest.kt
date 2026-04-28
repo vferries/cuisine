@@ -66,4 +66,18 @@ class SearchTest {
     @Test fun returns_empty_when_nothing_matches() {
         assertEquals(emptyList<String>(), matchingRecipeSlugs(listOf(porc, risotto), "xyzzy"))
     }
+
+    @Test fun scope_ingredients_does_not_match_cuisine() {
+        assertEquals(
+            emptyList<String>(),
+            matchingRecipeSlugs(listOf(porc, risotto), "italienne", SearchScope.INGREDIENTS),
+        )
+    }
+
+    @Test fun scope_ingredients_still_matches_ingredients() {
+        assertEquals(
+            listOf("risotto"),
+            matchingRecipeSlugs(listOf(porc, risotto), "arborio", SearchScope.INGREDIENTS),
+        )
+    }
 }

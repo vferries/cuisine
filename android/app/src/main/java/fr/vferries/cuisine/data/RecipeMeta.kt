@@ -13,6 +13,7 @@ data class RecipeMeta(
     val totalTime: Int,
     val difficulty: String,
     val cuisine: String,
+    val course: String = "",
     val region: String? = null,
     val tags: List<String> = emptyList(),
     val image: String? = null,
