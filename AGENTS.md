@@ -124,7 +124,7 @@ Click sur un `<li>` d'ingrédient toggle `.is-checked` (strike-through + dim 45%
 - Build-index (`tooling/src/build-index.ts`) — `recipes/*.cook` → `web/src/generated/index.json` + `web/src/generated/recipes/{slug}.json`.
 - Validator étendu (`tooling/src/validate-cook.ts`) — errors : metadata requises (dont `course`), difficulty et course enum, servings > 0, aucune étape, image absente. Warnings : tags/source absents, unités hors liste, pluriels (pour guider vers singulier).
 - Image pipeline (`tooling/src/build-images.ts`) — sharp convertit `recipes/images/*` en `web/public/images/{slug}.webp` + `{slug}.thumb.webp`, sortie gitignorée.
-- Accueil (`web/src/pages/index.astro`) — liste avec vignettes thumb, **recherche MiniSearch câblée** (titre ×3, ingrédients ×2, tags ×2, cuisine ×1, prefix+fuzzy), **chips fonctionnels** (all/favoris/rapide/vege/asiatique/francais/dessert, AND avec la recherche), **cœur favoris** sur chaque carte.
+- Accueil (`web/src/pages/index.astro`) — liste avec vignettes thumb, **recherche MiniSearch câblée** (titre ×3, ingrédients ×2, tags ×2, cuisine ×1, prefix+fuzzy), **chips fonctionnels** (all/favoris/rapide/vege/asiatique/francais/dessert, AND avec la recherche), **cœur favoris** sur chaque carte. **Panneau "Filtres avancés"** dépliable (animation `grid-template-rows`, `prefers-reduced-motion` respecté) : portée recherche tout/ingrédients, course (entrée/plat/dessert), difficulté, sans gluten, tri (récent/alpha/durée). Tous ANDent avec les chips et la recherche.
 - Vue recette (`web/src/pages/[slug].astro`) — deux colonnes desktop, image héro, ingrédients cochables avec "Tout décocher" (persisté par slug), ustensiles, étapes numérotées avec timer pills cliquables, aside Astuces, **portions dynamiques** (+/− scale en live), bouton Mode cuisson câblé. **Onglets sur mobile** (Ingrédients / Étapes / Ustensiles).
 - Mode cuisson (`web/src/pages/cuisson/[slug].astro`) — plein écran pas-à-pas, pills timer statiques (cliquables pour alimenter le tray global), Wake Lock.
 - **Timer tray global** (`Base.astro` + `web/src/lib/timers.ts`) — click sur une pill démarre un timer persisté en localStorage avec id stable (`slug:sectionIdx:stepIdx:tokenIdx`), tick 1s, expire → blink + son `web/public/audio/timer-beep.mp3` une fois, dismiss via ✕, visible cross-page.
@@ -168,10 +168,12 @@ Faits (tout le périmètre web) :
 - [x] Release pipeline Android : workflow `android-release.yml` déclenché sur tag `v*.*.*`, APK signé uploadé en GitHub Release.
 - [x] Timers Android fiables : AlarmManager + BroadcastReceiver + notification système. Survivent au kill de l'app. Onboarding `SCHEDULE_EXACT_ALARM` dans Réglages.
 - [x] Favoris (web + Android) : `FavoritesStore` SharedPrefs côté Android (clé `favorites`, mirroir de `ChecklistStore`), `lib/favorites.ts` localStorage côté web. Cœur sur la carte d'accueil et la page détail, chip "Favoris" intégré au filtrage AND avec la recherche.
+- [x] Champ `course` (entrée/plat/dessert) requis dans les metadata, validé en enum.
+- [x] Panneau de recherche avancée (web) : portée tout/ingrédients, course, difficulté, sans gluten, tri récent/alpha/durée.
 
 Reste à faire (par ordre d'utilité décroissante) :
 
-1. **Activer le bouton "Récent"** sur l'accueil — il est dans le DOM mais inerte. Tri par `updatedAt`, avec alternance "Alphabétique". Prendra son sens à 50+ recettes.
+1. **Parité Android** du panneau de recherche avancée — exposer course/difficulté/sans gluten/portée/tris dans l'app Compose.
 2. **Bouton "Au hasard"** sur l'accueil — pour les soirs sans inspiration. Petit, dans le ton cookbook, zéro nouvel écran. À porter aussi côté Android.
 3. **Afficher le champ `source`** sur la page recette — il existe dans les metadata (le validateur warn si absent) mais n'est rendu nulle part.
 4. **Feuille d'impression dédiée** (`@media print`) — masquer nav, CTA, onglets ; imprimer ingrédients + étapes proprement.
