@@ -41,6 +41,25 @@ test("filtre difficulté ne garde que les recettes du niveau choisi", async ({
   expect(await page.locator(".recipe-row:visible").count()).toBeGreaterThan(0);
 });
 
+test("filtre 'Sans gluten' ne garde que les recettes taguées en conséquence", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  await page.getByRole("button", { name: /filtres avancés/i }).click();
+
+  const before = await page.locator(".recipe-row:visible").count();
+  expect(before).toBeGreaterThan(2);
+
+  await page.getByRole("button", { name: "Sans gluten", exact: true }).click();
+
+  const flan = page.locator('.recipe-row[data-slug="flan-caramel-maman"]');
+  await expect(flan).toBeVisible();
+
+  const carrot = page.locator('.recipe-row[data-slug="carrot-cake"]');
+  await expect(carrot).toBeHidden();
+});
+
 test("le panneau de recherche avancée révèle un filtre course", async ({
   page,
 }) => {

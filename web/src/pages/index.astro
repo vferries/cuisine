@@ -94,6 +94,12 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
           </div>
         </fieldset>
         <fieldset class="advanced-group">
+          <legend>Régime</legend>
+          <div class="chips">
+            <button class="chip" type="button" data-diet="sans-gluten" aria-pressed="false">Sans gluten</button>
+          </div>
+        </fieldset>
+        <fieldset class="advanced-group">
           <legend>Tri</legend>
           <div class="chips">
             <button class="chip is-active" type="button" data-sort="recent">Récent</button>
@@ -178,6 +184,7 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
     filterByChip,
     filterByCourse,
     filterByDifficulty,
+    filterBySansGluten,
     type ChipKey,
     type ChipFilterDoc,
     type Course,
@@ -206,6 +213,9 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
   );
   const difficultyChips = document.querySelectorAll<HTMLButtonElement>(
     ".chip[data-difficulty]",
+  );
+  const sansGlutenChip = document.querySelector<HTMLButtonElement>(
+    '.chip[data-diet="sans-gluten"]',
   );
   const sortChips = document.querySelectorAll<HTMLButtonElement>(
     ".chip[data-sort]",
@@ -238,6 +248,7 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
     let activeChip: ChipKey = "all";
     let activeCourse: Course | null = null;
     let activeDifficulty: Difficulty | null = null;
+    let sansGlutenActive = false;
     let activeSort: SortMode = "recent";
     let activeScope: SearchScope = "all";
 
@@ -266,6 +277,9 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
       const allowedByDifficulty = new Set(
         filterByDifficulty(recipes, activeDifficulty),
       );
+      const allowedByDiet = new Set(
+        filterBySansGluten(recipes, sansGlutenActive),
+      );
       const matched = new Set(
         matchingRecipeSlugs(recipes, currentQuery, activeScope),
       );
@@ -275,7 +289,8 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
           matched.has(s) &&
           allowedByChip.has(s) &&
           allowedByCourse.has(s) &&
-          allowedByDifficulty.has(s),
+          allowedByDifficulty.has(s) &&
+          allowedByDiet.has(s),
       );
       list!.replaceChildren();
       for (const slug of slugs) {
@@ -345,6 +360,13 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
         btn.classList.add("is-active");
         render();
       });
+    });
+
+    sansGlutenChip?.addEventListener("click", () => {
+      sansGlutenActive = !sansGlutenActive;
+      sansGlutenChip.classList.toggle("is-active", sansGlutenActive);
+      sansGlutenChip.setAttribute("aria-pressed", String(sansGlutenActive));
+      render();
     });
 
     const setPanelOpen = (open: boolean) => {

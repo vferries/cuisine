@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { filterByChip, filterByCourse, filterByDifficulty } from "./chips";
+import {
+  filterByChip,
+  filterByCourse,
+  filterByDifficulty,
+  filterBySansGluten,
+} from "./chips";
 
 const porc = {
   slug: "porc-bigorre-caramel",
@@ -118,5 +123,27 @@ describe("filterByDifficulty", () => {
     expect(filterByDifficulty([porc, salade, tarte], "facile")).toEqual([
       "salade-tomate-mozza",
     ]);
+  });
+});
+
+describe("filterBySansGluten", () => {
+  const flan = {
+    slug: "flan",
+    cuisine: "française",
+    course: "dessert",
+    difficulty: "facile",
+    tags: ["dessert", "sans gluten"],
+    totalTime: 80,
+  };
+
+  it("inactif: retourne tous les slugs", () => {
+    expect(filterBySansGluten([porc, flan], false)).toEqual([
+      "porc-bigorre-caramel",
+      "flan",
+    ]);
+  });
+
+  it("actif: ne retient que les recettes taguées 'sans gluten'", () => {
+    expect(filterBySansGluten([porc, flan], true)).toEqual(["flan"]);
   });
 });

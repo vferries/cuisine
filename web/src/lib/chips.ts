@@ -66,3 +66,13 @@ export function filterByDifficulty(
     .filter((r) => r.difficulty === difficulty)
     .map((r) => r.slug);
 }
+
+export function filterBySansGluten(
+  recipes: ChipFilterDoc[],
+  active: boolean,
+): string[] {
+  if (!active) return recipes.map((r) => r.slug);
+  return recipes
+    .filter((r) => r.tags.includes("sans gluten"))
+    .map((r) => r.slug);
+}
