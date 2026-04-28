@@ -78,13 +78,21 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
             <button class="chip" type="button" data-course="dessert">Dessert</button>
           </div>
         </fieldset>
+        <fieldset class="advanced-group">
+          <legend>Tri</legend>
+          <div class="chips">
+            <button class="chip is-active" type="button" data-sort="recent">Récent</button>
+            <button class="chip" type="button" data-sort="alpha">Alphabétique</button>
+            <button class="chip" type="button" data-sort="duration">Durée</button>
+          </div>
+        </fieldset>
       </div>
     </section>
 
     <div class="count-row">
       <span class="count">{recipes.length} recette{recipes.length > 1 ? "s" : ""}</span>
-      <button class="sort" type="button">
-        Récent
+      <button class="sort" type="button" aria-controls="advanced-panel">
+        <span class="sort-label">Récent</span>
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
       </button>
     </div>
@@ -154,6 +162,7 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
     type ChipFilterDoc,
     type Course,
   } from "../lib/chips";
+  import { sortRecipes, type SortMode, type SortableRecipe } from "../lib/sort";
   import {
     isFavorite,
     readFavorites,
@@ -161,7 +170,9 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
     writeFavorites,
   } from "../lib/favorites";
 
-  const recipes = indexData.recipes as RecipeSearchDoc[] & ChipFilterDoc[];
+  const recipes = indexData.recipes as RecipeSearchDoc[] &
+    ChipFilterDoc[] &
+    SortableRecipe[];
   const input = document.querySelector<HTMLInputElement>(
     'input[type="search"]',
   );
@@ -171,6 +182,12 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
   );
   const courseChips = document.querySelectorAll<HTMLButtonElement>(
     ".chip[data-course]",
+  );
+  const sortChips = document.querySelectorAll<HTMLButtonElement>(
+    ".chip[data-sort]",
+  );
+  const sortLabel = document.querySelector<HTMLElement>(
+    ".count-row .sort-label",
   );
   const advancedToggle = document.querySelector<HTMLButtonElement>(
     ".advanced-toggle",
@@ -193,6 +210,13 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
     let currentQuery = "";
     let activeChip: ChipKey = "all";
     let activeCourse: Course | null = null;
+    let activeSort: SortMode = "recent";
+
+    const SORT_LABELS: Record<SortMode, string> = {
+      recent: "Récent",
+      alpha: "Alphabétique",
+      duration: "Durée",
+    };
 
     const syncHearts = () => {
       const favs = readFavorites(localStorage);
@@ -210,8 +234,10 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
         filterByChip(recipes, activeChip, { favorites }),
       );
       const allowedByCourse = new Set(filterByCourse(recipes, activeCourse));
-      const slugs = matchingRecipeSlugs(recipes, currentQuery).filter(
-        (s) => allowedByChip.has(s) && allowedByCourse.has(s),
+      const matched = new Set(matchingRecipeSlugs(recipes, currentQuery));
+      const order = sortRecipes(recipes, activeSort);
+      const slugs = order.filter(
+        (s) => matched.has(s) && allowedByChip.has(s) && allowedByCourse.has(s),
       );
       list!.replaceChildren();
       for (const slug of slugs) {
@@ -249,12 +275,30 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
       });
     });
 
+    sortChips.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeSort = btn.dataset.sort as SortMode;
+        sortChips.forEach((b) => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
+        if (sortLabel) sortLabel.textContent = SORT_LABELS[activeSort];
+        render();
+      });
+    });
+
+    const setPanelOpen = (open: boolean) => {
+      if (!advancedToggle || !advancedPanel) return;
+      advancedToggle.setAttribute("aria-expanded", String(open));
+      advancedPanel.setAttribute("aria-hidden", String(!open));
+    };
     if (advancedToggle && advancedPanel) {
       advancedToggle.addEventListener("click", () => {
-        const next = advancedToggle.getAttribute("aria-expanded") !== "true";
-        advancedToggle.setAttribute("aria-expanded", String(next));
-        advancedPanel.setAttribute("aria-hidden", String(!next));
+        const open = advancedToggle.getAttribute("aria-expanded") !== "true";
+        setPanelOpen(open);
       });
+      const sortButton = document.querySelector<HTMLButtonElement>(
+        ".count-row .sort",
+      );
+      sortButton?.addEventListener("click", () => setPanelOpen(true));
     }
 
     favoriteButtons.forEach((btn) => {

@@ -1,5 +1,17 @@
 import { expect, test } from "@playwright/test";
 
+test("tri 'Alphabétique' réordonne la liste par titre", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByRole("button", { name: /filtres avancés/i }).click();
+
+  await page.getByRole("button", { name: "Alphabétique" }).click();
+
+  const titles = await page.locator(".recipe-row .rec-title").allTextContents();
+  const sorted = [...titles].sort((x, y) => x.localeCompare(y, "fr"));
+  expect(titles).toEqual(sorted);
+});
+
 test("le panneau de recherche avancée révèle un filtre course", async ({
   page,
 }) => {
