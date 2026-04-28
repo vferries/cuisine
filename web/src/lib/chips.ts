@@ -2,6 +2,7 @@ export interface ChipFilterDoc {
   slug: string;
   cuisine: string;
   course?: string;
+  difficulty?: string;
   tags: string[];
   totalTime: number;
 }
@@ -52,4 +53,16 @@ export function filterByCourse(
 ): string[] {
   if (!course) return recipes.map((r) => r.slug);
   return recipes.filter((r) => r.course === course).map((r) => r.slug);
+}
+
+export type Difficulty = "facile" | "moyenne" | "difficile";
+
+export function filterByDifficulty(
+  recipes: ChipFilterDoc[],
+  difficulty: Difficulty | null,
+): string[] {
+  if (!difficulty) return recipes.map((r) => r.slug);
+  return recipes
+    .filter((r) => r.difficulty === difficulty)
+    .map((r) => r.slug);
 }

@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { filterByChip, filterByCourse } from "./chips";
+import { filterByChip, filterByCourse, filterByDifficulty } from "./chips";
 
 const porc = {
   slug: "porc-bigorre-caramel",
   cuisine: "vietnamienne",
   course: "plat",
+  difficulty: "moyenne",
   tags: ["porc", "asiatique"],
   totalTime: 45,
 };
@@ -13,6 +14,7 @@ const salade = {
   slug: "salade-tomate-mozza",
   cuisine: "italienne",
   course: "entrée",
+  difficulty: "facile",
   tags: ["végé", "rapide"],
   totalTime: 10,
 };
@@ -21,6 +23,7 @@ const tarte = {
   slug: "tarte-tatin",
   cuisine: "française",
   course: "dessert",
+  difficulty: "difficile",
   tags: ["dessert"],
   totalTime: 60,
 };
@@ -98,6 +101,22 @@ describe("filterByCourse", () => {
   it("ne retient que les recettes dont course = 'dessert'", () => {
     expect(filterByCourse([porc, salade, tarte], "dessert")).toEqual([
       "tarte-tatin",
+    ]);
+  });
+});
+
+describe("filterByDifficulty", () => {
+  it("retourne tous les slugs quand aucune difficulté n'est sélectionnée", () => {
+    expect(filterByDifficulty([porc, salade, tarte], null)).toEqual([
+      "porc-bigorre-caramel",
+      "salade-tomate-mozza",
+      "tarte-tatin",
+    ]);
+  });
+
+  it("ne retient que les recettes dont difficulty = 'facile'", () => {
+    expect(filterByDifficulty([porc, salade, tarte], "facile")).toEqual([
+      "salade-tomate-mozza",
     ]);
   });
 });

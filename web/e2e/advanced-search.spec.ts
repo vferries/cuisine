@@ -27,6 +27,20 @@ test("portée 'Ingrédients' restreint la recherche aux ingrédients", async ({
   await expect(page.locator(".recipe-row:visible")).toHaveCount(0);
 });
 
+test("filtre difficulté ne garde que les recettes du niveau choisi", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  await page.getByRole("button", { name: /filtres avancés/i }).click();
+  await page.getByRole("button", { name: "Difficile", exact: true }).click();
+
+  await expect(page.locator(".recipe-row:visible")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Difficile", exact: true }).click();
+  expect(await page.locator(".recipe-row:visible").count()).toBeGreaterThan(0);
+});
+
 test("le panneau de recherche avancée révèle un filtre course", async ({
   page,
 }) => {

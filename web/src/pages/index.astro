@@ -86,6 +86,14 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
           </div>
         </fieldset>
         <fieldset class="advanced-group">
+          <legend>Difficulté</legend>
+          <div class="chips">
+            <button class="chip" type="button" data-difficulty="facile">Facile</button>
+            <button class="chip" type="button" data-difficulty="moyenne">Moyenne</button>
+            <button class="chip" type="button" data-difficulty="difficile">Difficile</button>
+          </div>
+        </fieldset>
+        <fieldset class="advanced-group">
           <legend>Tri</legend>
           <div class="chips">
             <button class="chip is-active" type="button" data-sort="recent">Récent</button>
@@ -169,9 +177,11 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
   import {
     filterByChip,
     filterByCourse,
+    filterByDifficulty,
     type ChipKey,
     type ChipFilterDoc,
     type Course,
+    type Difficulty,
   } from "../lib/chips";
   import { sortRecipes, type SortMode, type SortableRecipe } from "../lib/sort";
   import {
@@ -193,6 +203,9 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
   );
   const courseChips = document.querySelectorAll<HTMLButtonElement>(
     ".chip[data-course]",
+  );
+  const difficultyChips = document.querySelectorAll<HTMLButtonElement>(
+    ".chip[data-difficulty]",
   );
   const sortChips = document.querySelectorAll<HTMLButtonElement>(
     ".chip[data-sort]",
@@ -224,6 +237,7 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
     let currentQuery = "";
     let activeChip: ChipKey = "all";
     let activeCourse: Course | null = null;
+    let activeDifficulty: Difficulty | null = null;
     let activeSort: SortMode = "recent";
     let activeScope: SearchScope = "all";
 
@@ -249,12 +263,19 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
         filterByChip(recipes, activeChip, { favorites }),
       );
       const allowedByCourse = new Set(filterByCourse(recipes, activeCourse));
+      const allowedByDifficulty = new Set(
+        filterByDifficulty(recipes, activeDifficulty),
+      );
       const matched = new Set(
         matchingRecipeSlugs(recipes, currentQuery, activeScope),
       );
       const order = sortRecipes(recipes, activeSort);
       const slugs = order.filter(
-        (s) => matched.has(s) && allowedByChip.has(s) && allowedByCourse.has(s),
+        (s) =>
+          matched.has(s) &&
+          allowedByChip.has(s) &&
+          allowedByCourse.has(s) &&
+          allowedByDifficulty.has(s),
       );
       list!.replaceChildren();
       for (const slug of slugs) {
@@ -286,6 +307,21 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
         } else {
           activeCourse = next;
           courseChips.forEach((b) => b.classList.remove("is-active"));
+          btn.classList.add("is-active");
+        }
+        render();
+      });
+    });
+
+    difficultyChips.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const next = btn.dataset.difficulty as Difficulty;
+        if (activeDifficulty === next) {
+          activeDifficulty = null;
+          btn.classList.remove("is-active");
+        } else {
+          activeDifficulty = next;
+          difficultyChips.forEach((b) => b.classList.remove("is-active"));
           btn.classList.add("is-active");
         }
         render();
