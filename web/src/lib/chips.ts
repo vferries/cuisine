@@ -1,6 +1,7 @@
 export interface ChipFilterDoc {
   slug: string;
   cuisine: string;
+  course?: string;
   tags: string[];
   totalTime: number;
 }
@@ -26,7 +27,7 @@ const CHIP_PREDICATES: Record<
   vege: (r) => r.tags.includes("végé"),
   asiatique: (r) => r.tags.includes("asiatique"),
   francais: (r) => r.cuisine === "française",
-  dessert: (r) => r.tags.includes("dessert"),
+  dessert: (r) => r.course === "dessert" || r.tags.includes("dessert"),
 };
 
 export function filterByChip(
@@ -41,4 +42,14 @@ export function filterByChip(
   }
   const predicate = CHIP_PREDICATES[chip];
   return recipes.filter(predicate).map((r) => r.slug);
+}
+
+export type Course = "entrée" | "plat" | "dessert";
+
+export function filterByCourse(
+  recipes: ChipFilterDoc[],
+  course: Course | null,
+): string[] {
+  if (!course) return recipes.map((r) => r.slug);
+  return recipes.filter((r) => r.course === course).map((r) => r.slug);
 }

@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { filterByChip } from "./chips";
+import { filterByChip, filterByCourse } from "./chips";
 
 const porc = {
   slug: "porc-bigorre-caramel",
   cuisine: "vietnamienne",
+  course: "plat",
   tags: ["porc", "asiatique"],
   totalTime: 45,
 };
@@ -11,6 +12,7 @@ const porc = {
 const salade = {
   slug: "salade-tomate-mozza",
   cuisine: "italienne",
+  course: "entrée",
   tags: ["végé", "rapide"],
   totalTime: 10,
 };
@@ -18,6 +20,7 @@ const salade = {
 const tarte = {
   slug: "tarte-tatin",
   cuisine: "française",
+  course: "dessert",
   tags: ["dessert"],
   totalTime: 60,
 };
@@ -68,5 +71,33 @@ describe("filterByChip", () => {
 
   it("chip 'favoris' retourne [] si aucun favori connu", () => {
     expect(filterByChip([porc, salade, tarte], "favoris", { favorites: [] })).toEqual([]);
+  });
+});
+
+describe("filterByCourse", () => {
+  it("retourne tous les slugs quand aucune course n'est sélectionnée", () => {
+    expect(filterByCourse([porc, salade, tarte], null)).toEqual([
+      "porc-bigorre-caramel",
+      "salade-tomate-mozza",
+      "tarte-tatin",
+    ]);
+  });
+
+  it("ne retient que les recettes dont course = 'entrée'", () => {
+    expect(filterByCourse([porc, salade, tarte], "entrée")).toEqual([
+      "salade-tomate-mozza",
+    ]);
+  });
+
+  it("ne retient que les recettes dont course = 'plat'", () => {
+    expect(filterByCourse([porc, salade, tarte], "plat")).toEqual([
+      "porc-bigorre-caramel",
+    ]);
+  });
+
+  it("ne retient que les recettes dont course = 'dessert'", () => {
+    expect(filterByCourse([porc, salade, tarte], "dessert")).toEqual([
+      "tarte-tatin",
+    ]);
   });
 });

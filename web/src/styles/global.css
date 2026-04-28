@@ -216,6 +216,65 @@ input {
   flex-wrap: wrap;
   margin-bottom: 26px;
 }
+.advanced-panel .chips {
+  margin-bottom: 0;
+}
+
+.advanced-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  margin: -18px 0 18px;
+  background: none;
+  border: none;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.advanced-toggle svg {
+  transition: transform 0.2s ease;
+}
+.advanced-toggle[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+.advanced-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 250ms ease;
+  margin-bottom: 0;
+}
+.advanced-panel[aria-hidden="false"] {
+  grid-template-rows: 1fr;
+  margin-bottom: 26px;
+}
+.advanced-panel__inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.advanced-group {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.advanced-group > legend {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: 0;
+  margin-bottom: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .advanced-panel,
+  .advanced-toggle svg {
+    transition: none;
+  }
+}
 .chip {
   padding: 7px 14px;
   border-radius: var(--radius-pill);
