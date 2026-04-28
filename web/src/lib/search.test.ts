@@ -32,4 +32,23 @@ describe("matchingRecipeSlugs", () => {
     const slugs = matchingRecipeSlugs([porc, risotto], "");
     expect(slugs).toEqual(["porc-bigorre-caramel", "risotto-champignons"]);
   });
+
+  it("scope 'ingredients' n'indexe que ingredientNames — un match sur la cuisine ne ressort pas", () => {
+    const slugs = matchingRecipeSlugs(
+      [porc, risotto],
+      "italienne",
+      "ingredients",
+    );
+    expect(slugs).toEqual([]);
+  });
+
+  it("scope 'ingredients' trouve toujours un match d'ingrédient", () => {
+    const slugs = matchingRecipeSlugs([porc, risotto], "champignons", "ingredients");
+    expect(slugs).toEqual(["risotto-champignons"]);
+  });
+
+  it("scope 'all' (default) matche aussi sur la cuisine", () => {
+    const slugs = matchingRecipeSlugs([porc, risotto], "italienne");
+    expect(slugs).toContain("risotto-champignons");
+  });
 });

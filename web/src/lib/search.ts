@@ -8,6 +8,8 @@ export interface RecipeSearchDoc {
   ingredientNames: string[];
 }
 
+export type SearchScope = "all" | "ingredients";
+
 function buildIndex(recipes: RecipeSearchDoc[]): MiniSearch<RecipeSearchDoc> {
   const index = new MiniSearch<RecipeSearchDoc>({
     idField: "slug",
@@ -25,8 +27,11 @@ function buildIndex(recipes: RecipeSearchDoc[]): MiniSearch<RecipeSearchDoc> {
 export function matchingRecipeSlugs(
   recipes: RecipeSearchDoc[],
   query: string,
+  scope: SearchScope = "all",
 ): string[] {
   if (!query.trim()) return recipes.map((r) => r.slug);
   const index = buildIndex(recipes);
-  return index.search(query).map((hit) => hit.id as string);
+  const opts =
+    scope === "ingredients" ? { fields: ["ingredientNames"] } : undefined;
+  return index.search(query, opts).map((hit) => hit.id as string);
 }

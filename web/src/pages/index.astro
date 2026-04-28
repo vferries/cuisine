@@ -71,6 +71,13 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
     >
       <div class="advanced-panel__inner">
         <fieldset class="advanced-group">
+          <legend>Recherche</legend>
+          <div class="chips">
+            <button class="chip is-active" type="button" data-scope="all">Tout</button>
+            <button class="chip" type="button" data-scope="ingredients">Ingrédients</button>
+          </div>
+        </fieldset>
+        <fieldset class="advanced-group">
           <legend>Course</legend>
           <div class="chips">
             <button class="chip" type="button" data-course="entrée">Entrée</button>
@@ -154,7 +161,11 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
 
 <script>
   import indexData from "../generated/index.json";
-  import { matchingRecipeSlugs, type RecipeSearchDoc } from "../lib/search";
+  import {
+    matchingRecipeSlugs,
+    type RecipeSearchDoc,
+    type SearchScope,
+  } from "../lib/search";
   import {
     filterByChip,
     filterByCourse,
@@ -186,6 +197,9 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
   const sortChips = document.querySelectorAll<HTMLButtonElement>(
     ".chip[data-sort]",
   );
+  const scopeChips = document.querySelectorAll<HTMLButtonElement>(
+    ".chip[data-scope]",
+  );
   const sortLabel = document.querySelector<HTMLElement>(
     ".count-row .sort-label",
   );
@@ -211,6 +225,7 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
     let activeChip: ChipKey = "all";
     let activeCourse: Course | null = null;
     let activeSort: SortMode = "recent";
+    let activeScope: SearchScope = "all";
 
     const SORT_LABELS: Record<SortMode, string> = {
       recent: "Récent",
@@ -234,7 +249,9 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
         filterByChip(recipes, activeChip, { favorites }),
       );
       const allowedByCourse = new Set(filterByCourse(recipes, activeCourse));
-      const matched = new Set(matchingRecipeSlugs(recipes, currentQuery));
+      const matched = new Set(
+        matchingRecipeSlugs(recipes, currentQuery, activeScope),
+      );
       const order = sortRecipes(recipes, activeSort);
       const slugs = order.filter(
         (s) => matched.has(s) && allowedByChip.has(s) && allowedByCourse.has(s),
@@ -281,6 +298,15 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
         sortChips.forEach((b) => b.classList.remove("is-active"));
         btn.classList.add("is-active");
         if (sortLabel) sortLabel.textContent = SORT_LABELS[activeSort];
+        render();
+      });
+    });
+
+    scopeChips.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeScope = btn.dataset.scope as SearchScope;
+        scopeChips.forEach((b) => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
         render();
       });
     });

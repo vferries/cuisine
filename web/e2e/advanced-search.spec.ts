@@ -12,6 +12,21 @@ test("tri 'Alphabétique' réordonne la liste par titre", async ({ page }) => {
   expect(titles).toEqual(sorted);
 });
 
+test("portée 'Ingrédients' restreint la recherche aux ingrédients", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  await page.getByRole("searchbox").fill("française");
+  const visibleBefore = await page.locator(".recipe-row:visible").count();
+  expect(visibleBefore).toBeGreaterThan(0);
+
+  await page.getByRole("button", { name: /filtres avancés/i }).click();
+  await page.getByRole("button", { name: "Ingrédients", exact: true }).click();
+
+  await expect(page.locator(".recipe-row:visible")).toHaveCount(0);
+});
+
 test("le panneau de recherche avancée révèle un filtre course", async ({
   page,
 }) => {
