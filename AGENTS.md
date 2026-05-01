@@ -170,12 +170,12 @@ Faits (tout le périmètre web) :
 - [x] Favoris (web + Android) : `FavoritesStore` SharedPrefs côté Android (clé `favorites`, mirroir de `ChecklistStore`), `lib/favorites.ts` localStorage côté web. Cœur sur la carte d'accueil et la page détail, chip "Favoris" intégré au filtrage AND avec la recherche.
 - [x] Champ `course` (entrée/plat/dessert) requis dans les metadata, validé en enum.
 - [x] Panneau de recherche avancée (web + Android) : portée tout/ingrédients, course, difficulté, sans gluten, tri récent/alpha/durée. Côté Android, `Course`/`Difficulty`/`SortMode`/`SearchScope` enums dans `data/`, panneau Compose avec FilterChips groupés, état `rememberSaveable`.
+- [x] Affichage du champ `source` (web + Android) — rendu en italique préfixé par "D'après". Côté web, sous le `<h1>` dans le header (Fraunces italique). Côté Android, sous l'image hero (bodyMedium italique), le titre étant pris par la TopAppBar.
 
 Reste à faire (par ordre d'utilité décroissante) :
 
 1. **Bouton "Au hasard"** sur l'accueil — pour les soirs sans inspiration. Petit, dans le ton cookbook, zéro nouvel écran. À porter aussi côté Android.
-2. **Afficher le champ `source`** sur la page recette — il existe dans les metadata (le validateur warn si absent) mais n'est rendu nulle part.
-3. **Feuille d'impression dédiée** (`@media print`) — masquer nav, CTA, onglets ; imprimer ingrédients + étapes proprement.
+2. **Feuille d'impression dédiée** (`@media print`) — masquer nav, CTA, onglets ; imprimer ingrédients + étapes proprement.
 
 Pas retenu :
 
