@@ -17,6 +17,7 @@ test("impression : chrome masqué, tous les panels visibles malgré l'onglet mob
   await expect(page.locator(".header-actions")).toBeHidden();
   await expect(page.locator(".theme-toggle")).toBeHidden();
   await expect(page.locator(".tabs")).toBeHidden();
+  await expect(page.locator(".portions")).toBeHidden();
 
   await expect(
     page.locator('.panel[data-panel="ingredients"]').first(),

@@ -987,7 +987,7 @@ input {
   .header-actions,
   .tabs,
   .checklist-clear,
-  .portions .controls,
+  .portions,
   .step-timer svg,
   .ingredient-list .check {
     display: none !important;
