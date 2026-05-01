@@ -435,6 +435,14 @@ input {
   margin: 10px 0 14px;
   max-width: 640px;
 }
+.recipe-header .recipe-source {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 0 0 14px;
+  max-width: 640px;
+}
 .recipe-header .meta-row {
   display: flex;
   gap: 20px;

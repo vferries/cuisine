@@ -58,6 +58,9 @@ const totalTime =
           {meta.cuisine}{meta.region ? ` · ${meta.region}` : ""}
         </p>
         <h1>{meta.title}</h1>
+        {meta.source && (
+          <p class="recipe-source">D'après {meta.source}</p>
+        )}
         <div class="meta-row">
           <span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
