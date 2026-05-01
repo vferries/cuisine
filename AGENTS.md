@@ -172,10 +172,11 @@ Faits (tout le périmètre web) :
 - [x] Panneau de recherche avancée (web + Android) : portée tout/ingrédients, course, difficulté, sans gluten, tri récent/alpha/durée. Côté Android, `Course`/`Difficulty`/`SortMode`/`SearchScope` enums dans `data/`, panneau Compose avec FilterChips groupés, état `rememberSaveable`.
 - [x] Affichage du champ `source` (web + Android) — rendu en italique préfixé par "D'après". Côté web, sous le `<h1>` dans le header (Fraunces italique). Côté Android, sous l'image hero (bodyMedium italique), le titre étant pris par la TopAppBar.
 - [x] Feuille d'impression dédiée (web) — bloc `@media print` qui masque chrome (nav, CTA, onglets, theme-toggle, timer-tray) et force tous les panels visibles indépendamment de l'onglet actif sur mobile. Hero réduit, fond blanc.
+- [x] Bouton "Au hasard" sur l'accueil (web + Android) — pioche dans la liste actuellement filtrée (recherche, chips et panneau avancé respectés). Web : dans `.count-row` à droite. Android : TextButton à gauche du toggle Filtres avancés. Lib `pickRandom` à RNG injectable côté web (`lib/random.ts`) et Android (`data/Random.kt`).
 
-Reste à faire (par ordre d'utilité décroissante) :
+Reste à faire :
 
-1. **Bouton "Au hasard"** sur l'accueil — pour les soirs sans inspiration. Petit, dans le ton cookbook, zéro nouvel écran. À porter aussi côté Android.
+_Backlog vide._ Toutes les features prévues sont livrées. Idées qui pourraient venir : étiquettes saisonnières, planning hebdo, export PDF, image hero de meilleure qualité.
 
 Pas retenu :
 
