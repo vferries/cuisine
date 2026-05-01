@@ -143,8 +143,6 @@ Click sur un `<li>` d'ingrédient toggle `.is-checked` (strike-through + dim 45%
 
 ### Limites connues du parser
 
-- Pas de block-comments `[- ... -]`.
-- Pas de bloc `--` pour les notes de recette officielles de Cooklang.
 - Pas de shopping list ni scaling natif — fait à la main côté UI.
 - La somme des quantités dupliquées ne marche que si l'unité est identique.
 
