@@ -7,12 +7,12 @@
  * - Ingredients (`@name{qty%unit}`)
  * - Cookware (`#name{qty}`)
  * - Timers (`~name{qty%unit}`)
- * - Comments (`-- ...` single-line)
+ * - Comments (`-- ...` single-line, inline ou pleine ligne)
+ * - Block comments (`[- ... -]`, possibly multi-line)
  *
  * Spec : https://cooklang.org/docs/spec/
  *
- * Not implemented (yet): block comments `[- ... -]`,
- * shopping list, notes field, servings scaling.
+ * Not implemented (yet): shopping list, servings scaling.
  */
 
 export interface Ingredient {
@@ -176,8 +176,19 @@ function stepHasContent(tokens: Token[]): boolean {
   );
 }
 
+function stripBlockComments(source: string): string {
+  // Remove [- ... -] spans, possibly multi-line. Non-greedy, /s flag covers \n.
+  return source.replace(/\[-[\s\S]*?-\]/g, "");
+}
+
+function stripInlineLineComment(line: string): string {
+  // Remove anything from "--" to end of line (Cooklang single-line comment).
+  const idx = line.indexOf("--");
+  return idx >= 0 ? line.slice(0, idx) : line;
+}
+
 export function parseCook(source: string): ParsedRecipe {
-  const lines = source.split("\n");
+  const lines = stripBlockComments(source).split("\n");
   const metadata: Record<string, string> = {};
   const sections: Section[] = [];
 
@@ -206,11 +217,12 @@ export function parseCook(source: string): ParsedRecipe {
   };
 
   for (const rawLine of lines) {
-    const line = rawLine.replace(/\r$/, "");
+    const cr = rawLine.replace(/\r$/, "");
+    // Metadata uses the `>>` prefix; comments inside metadata values are
+    // unlikely and stripping them changes nothing useful — apply only to
+    // non-metadata lines.
+    const line = cr.startsWith(">>") ? cr : stripInlineLineComment(cr);
     const trimmed = line.trim();
-
-    // Single-line comments
-    if (trimmed.startsWith("--")) continue;
 
     // Metadata
     if (inMetadata) {
