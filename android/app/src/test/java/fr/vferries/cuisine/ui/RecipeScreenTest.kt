@@ -87,6 +87,15 @@ class RecipeScreenTest {
     }
 
     @Test
+    fun source_is_displayed_when_metadata_has_source() {
+        val withSource = recipe.copy(
+            metadata = recipe.metadata + ("source" to "Sarah Truong Qui"),
+        )
+        composeRule.setContent { RecipeScreen(state = RecipeState.Success(withSource)) }
+        composeRule.onNodeWithText("D'après Sarah Truong Qui").assertIsDisplayed()
+    }
+
+    @Test
     fun favorite_button_toggles_label_and_persists() {
         composeRule.setContent { RecipeScreen(state = RecipeState.Success(recipe)) }
         composeRule.onNodeWithContentDescription("Marquer comme favori").assertIsDisplayed()

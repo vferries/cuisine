@@ -57,6 +57,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -240,6 +241,16 @@ private fun SuccessContent(recipe: Recipe, contentPadding: PaddingValues) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(with(density) { heroPx.toDp() }),
+            )
+        }
+        recipe.metadata["source"]?.takeIf { it.isNotBlank() }?.let { source ->
+            Text(
+                text = "D'après $source",
+                style = MaterialTheme.typography.bodyMedium.copy(fontStyle = FontStyle.Italic),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
         Row(
