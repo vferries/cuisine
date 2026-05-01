@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -66,6 +67,7 @@ import fr.vferries.cuisine.data.filterByCourse
 import fr.vferries.cuisine.data.filterByDifficulty
 import fr.vferries.cuisine.data.filterBySansGluten
 import fr.vferries.cuisine.data.matchingRecipeSlugs
+import fr.vferries.cuisine.data.pickRandom
 import fr.vferries.cuisine.data.sortRecipes
 
 sealed interface HomeState {
@@ -80,6 +82,7 @@ fun HomeScreen(
     state: HomeState,
     onRecipeClick: (String) -> Unit = {},
     onSettingsClick: () -> Unit = {},
+    rng: () -> Double = { kotlin.random.Random.Default.nextDouble() },
 ) {
     Scaffold(
         topBar = {
@@ -114,6 +117,7 @@ fun HomeScreen(
                 recipes = state.recipes,
                 contentPadding = padding,
                 onRecipeClick = onRecipeClick,
+                rng = rng,
             )
         }
     }
@@ -124,6 +128,7 @@ private fun SuccessList(
     recipes: List<RecipeMeta>,
     contentPadding: PaddingValues,
     onRecipeClick: (String) -> Unit,
+    rng: () -> Double,
 ) {
     val context = LocalContext.current
     val store = remember { FavoritesStore.from(context) }
@@ -188,10 +193,33 @@ private fun SuccessList(
             }
         }
         item {
-            AdvancedToggle(
-                open = advancedOpen,
-                onClick = { advancedOpen = !advancedOpen },
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                TextButton(
+                    onClick = {
+                        pickRandom(filtered, rng)?.let { onRecipeClick(it.slug) }
+                    },
+                    enabled = filtered.isNotEmpty(),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Casino,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = "Au hasard",
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+                Spacer(Modifier.weight(1f))
+                AdvancedToggle(
+                    open = advancedOpen,
+                    onClick = { advancedOpen = !advancedOpen },
+                )
+            }
         }
         if (advancedOpen) {
             item {

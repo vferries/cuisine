@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import fr.vferries.cuisine.data.RecipeMeta
 import fr.vferries.cuisine.data.favorites.FavoritesStore
@@ -96,6 +97,46 @@ class HomeScreenTest {
 
         val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
         org.junit.Assert.assertTrue(FavoritesStore.from(ctx).contains("a"))
+    }
+
+    @Test
+    fun random_button_navigates_to_recipe_from_filtered_pool() {
+        val recipes = listOf(
+            meta("a", "Recette A"),
+            meta("b", "Recette B"),
+            meta("c", "Recette C"),
+        )
+        var navigated: String? = null
+        composeRule.setContent {
+            HomeScreen(
+                state = HomeState.Success(recipes),
+                onRecipeClick = { navigated = it },
+                rng = { 0.0 },
+            )
+        }
+        composeRule.onNodeWithText("Au hasard").performClick()
+        org.junit.Assert.assertEquals("a", navigated)
+    }
+
+    @Test
+    fun random_button_respects_active_search_filter() {
+        val recipes = listOf(
+            meta("alpha", "Alpha"),
+            meta("bravo", "Bravo"),
+            meta("charlie", "Charlie"),
+        )
+        var navigated: String? = null
+        composeRule.setContent {
+            HomeScreen(
+                state = HomeState.Success(recipes),
+                onRecipeClick = { navigated = it },
+                rng = { 0.0 },
+            )
+        }
+        composeRule.onNodeWithText("Nom, ingrédient, tag…").performTextInput("Bravo")
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Au hasard").performClick()
+        org.junit.Assert.assertEquals("bravo", navigated)
     }
 
     @Test
