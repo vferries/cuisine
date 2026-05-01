@@ -955,3 +955,57 @@ input {
   cursor: pointer;
 }
 .timer-item button:hover { color: var(--accent); }
+
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+  .theme-toggle,
+  .timer-tray,
+  .back-link,
+  .header-actions,
+  .tabs,
+  .checklist-clear,
+  .portions .controls,
+  .step-timer svg,
+  .ingredient-list .check {
+    display: none !important;
+  }
+  .recipe-header {
+    border-bottom-color: #999;
+    page-break-after: avoid;
+  }
+  .layout {
+    display: block;
+  }
+  .layout .panel,
+  .layout[data-active-panel="ingredients"] .panel,
+  .layout[data-active-panel="steps"] .panel,
+  .layout[data-active-panel="cookware"] .panel {
+    display: block;
+    margin-bottom: 18px;
+  }
+  .sidebar {
+    position: static;
+  }
+  .hero-thumb {
+    max-width: 280px;
+    margin: 0 0 18px;
+    background: none;
+  }
+  .step,
+  .tips,
+  .section-heading {
+    page-break-inside: avoid;
+  }
+  .tips {
+    background: none;
+    border: 0.5px solid #999;
+  }
+  .step-timer {
+    background: none;
+    color: inherit;
+    border: 0.5px solid #999;
+  }
+}
