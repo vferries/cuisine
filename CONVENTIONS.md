@@ -103,7 +103,7 @@ Voir [`recipes/porc-bigorre-caramel.cook`](./recipes/porc-bigorre-caramel.cook).
 ## Workflow d'ajout d'une recette
 
 1. Créer `recipes/<slug>.cook` en suivant ce doc.
-2. (Optionnel) Déposer `recipes/images/<slug>.webp` (1024×768, ~150 Ko) — les thumbnails 320×240 seront générés automatiquement par le build (pas encore implémenté).
+2. (Optionnel) Déposer `recipes/images/<slug>.{png,jpg,jpeg,webp}` — le build (`build-images.ts`, sharp) convertit en WebP 1024×768 + thumbnail 320×240 automatiquement.
 3. `pnpm build-index` pour régénérer `web/src/generated/` localement.
 4. `git commit && git push`. À terme, GitHub Actions redéploiera Pages et l'app Android verra la nouvelle recette au prochain sync.
 
