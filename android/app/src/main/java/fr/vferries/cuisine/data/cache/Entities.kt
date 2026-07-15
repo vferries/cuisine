@@ -22,6 +22,7 @@ data class RecipeMetaEntity(
     val tags: List<String>,
     val image: String?,
     val ingredientNames: List<String>,
+    val saisonMonths: List<Int>,
     val updatedAt: String,
 )
 
@@ -39,6 +40,7 @@ fun RecipeMeta.toEntity() = RecipeMetaEntity(
     tags = tags,
     image = image,
     ingredientNames = ingredientNames,
+    saisonMonths = saisonMonths,
     updatedAt = updatedAt,
 )
 
@@ -56,6 +58,7 @@ fun RecipeMetaEntity.toDomain() = RecipeMeta(
     tags = tags,
     image = image,
     ingredientNames = ingredientNames,
+    saisonMonths = saisonMonths,
     updatedAt = updatedAt,
 )
 
@@ -76,4 +79,12 @@ class Converters {
     @TypeConverter
     fun jsonToStringList(value: String): List<String> =
         if (value.isBlank()) emptyList() else jsonFmt.decodeFromString<List<String>>(value)
+
+    @TypeConverter
+    fun intListToJson(value: List<Int>): String =
+        jsonFmt.encodeToString<List<Int>>(value)
+
+    @TypeConverter
+    fun jsonToIntList(value: String): List<Int> =
+        if (value.isBlank()) emptyList() else jsonFmt.decodeFromString<List<Int>>(value)
 }

@@ -141,11 +141,12 @@ private fun SuccessList(
     var difficulty by rememberSaveable { mutableStateOf<Difficulty?>(null) }
     var sansGluten by rememberSaveable { mutableStateOf(false) }
     var sortMode by rememberSaveable { mutableStateOf(SortMode.RECENT) }
+    val month = remember { java.util.Calendar.getInstance().get(java.util.Calendar.MONTH) + 1 }
     val filtered = remember(
-        recipes, query, chip, favorites, scope, course, difficulty, sansGluten, sortMode,
+        recipes, query, chip, favorites, scope, course, difficulty, sansGluten, sortMode, month,
     ) {
         val bySearch = matchingRecipeSlugs(recipes, query, scope).toSet()
-        val byChip = filterByChip(recipes, chip, favorites).toSet()
+        val byChip = filterByChip(recipes, chip, favorites, month).toSet()
         val byCourse = filterByCourse(recipes, course).toSet()
         val byDifficulty = filterByDifficulty(recipes, difficulty).toSet()
         val byDiet = filterBySansGluten(recipes, sansGluten).toSet()

@@ -45,6 +45,7 @@ class RecipeDaoTest {
         tags = listOf("a", "b"),
         image = null,
         ingredientNames = listOf("sucre"),
+        saisonMonths = emptyList(),
         updatedAt = updated,
     )
 

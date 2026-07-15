@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 
 @Database(
     entities = [RecipeMetaEntity::class, RecipeEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -23,7 +23,7 @@ abstract class CuisineDatabase : RoomDatabase() {
                 context.applicationContext,
                 CuisineDatabase::class.java,
                 "cuisine.db",
-            ).build().also { instance = it }
+            ).fallbackToDestructiveMigration().build().also { instance = it }
         }
     }
 }

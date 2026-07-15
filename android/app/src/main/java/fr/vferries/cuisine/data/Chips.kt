@@ -4,6 +4,7 @@ enum class ChipKey(val label: String) {
     ALL("Toutes"),
     FAVORIS("Favoris"),
     RAPIDE("Rapide"),
+    SAISON("De saison"),
     VEGE("Végé"),
     ASIATIQUE("Asiatique"),
     FRANCAIS("Français"),
@@ -23,9 +24,14 @@ fun filterByChip(
     recipes: List<RecipeMeta>,
     chip: ChipKey,
     favorites: Set<String> = emptySet(),
+    month: Int = 0,
 ): List<String> {
     if (chip == ChipKey.FAVORIS) {
         return recipes.filter { it.slug in favorites }.map { it.slug }
+    }
+    if (chip == ChipKey.SAISON) {
+        if (month == 0) return recipes.map { it.slug }
+        return recipes.filter { month in it.saisonMonths }.map { it.slug }
     }
     val predicate = predicates.getValue(chip)
     return recipes.filter(predicate).map { it.slug }

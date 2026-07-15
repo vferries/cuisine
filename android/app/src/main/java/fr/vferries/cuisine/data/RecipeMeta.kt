@@ -18,6 +18,7 @@ data class RecipeMeta(
     val tags: List<String> = emptyList(),
     val image: String? = null,
     val ingredientNames: List<String> = emptyList(),
+    val saisonMonths: List<Int> = emptyList(),
     val updatedAt: String,
 )
 

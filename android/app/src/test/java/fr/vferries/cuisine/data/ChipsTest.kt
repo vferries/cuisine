@@ -120,4 +120,36 @@ class ChipsTest {
             filterBySansGluten(listOf(porc, salade, tarte), true),
         )
     }
+
+    private fun saisonMeta(slug: String, saisonMonths: List<Int>) = RecipeMeta(
+        slug = slug,
+        title = slug,
+        servings = 4,
+        prepTime = 0,
+        cookTime = 0,
+        totalTime = 0,
+        difficulty = "facile",
+        cuisine = "",
+        updatedAt = "",
+        saisonMonths = saisonMonths,
+    )
+
+    @Test fun saison_keeps_recipes_matching_injected_month() {
+        val recipes = listOf(
+            saisonMeta("ete", listOf(6, 7, 8)),
+            saisonMeta("hiver", listOf(12, 1, 2)),
+        )
+        assertEquals(listOf("ete"), filterByChip(recipes, ChipKey.SAISON, month = 7))
+        assertEquals(listOf("hiver"), filterByChip(recipes, ChipKey.SAISON, month = 1))
+    }
+
+    @Test fun saison_excludes_recipes_without_months_when_month_given() {
+        val recipes = listOf(saisonMeta("x", emptyList()))
+        assertEquals(emptyList<String>(), filterByChip(recipes, ChipKey.SAISON, month = 7))
+    }
+
+    @Test fun saison_without_month_filters_nothing() {
+        val recipes = listOf(saisonMeta("ete", listOf(6, 7, 8)))
+        assertEquals(listOf("ete"), filterByChip(recipes, ChipKey.SAISON))
+    }
 }
