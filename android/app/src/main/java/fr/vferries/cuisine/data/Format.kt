@@ -13,6 +13,25 @@ private val PLURALIZABLE_UNITS = setOf(
     "pincée",
 )
 
+private val HUMANIZE_UP = mapOf(
+    "g" to ("kg" to 1000.0),
+    "ml" to ("l" to 1000.0),
+)
+
+private fun formatNumber(n: Double): String {
+    val rounded = Math.round(n * 1000).toDouble() / 1000.0
+    return if (rounded == rounded.toLong().toDouble()) rounded.toLong().toString()
+    else rounded.toString()
+}
+
+/** g→kg / ml→l dès 1000 ; qty/unit inchangés sinon. */
+private fun humanize(qty: String, unit: String?): Pair<String, String?> {
+    val up = unit?.let { HUMANIZE_UP[it] } ?: return qty to unit
+    val n = qty.toDoubleOrNull() ?: return qty to unit
+    if (n < up.second) return qty to unit
+    return formatNumber(n / up.second) to up.first
+}
+
 /** Returns unit display form, pluralized si qty > 1 et l'unité l'accepte. */
 fun formatUnit(qty: String, unit: String?): String {
     if (unit.isNullOrEmpty()) return ""
@@ -21,11 +40,12 @@ fun formatUnit(qty: String, unit: String?): String {
     return if (n != null && n > 1 && unit in PLURALIZABLE_UNITS) "${display}s" else display
 }
 
-/** Returns "<qty> <unit>" (ou "<qty>" ou null si qty vide). */
+/** Returns "<qty> <unit>" (ou "<qty>" ou null si qty vide), humanisé kg/l. */
 fun formatQty(qty: String, unit: String?): String? {
     if (qty.isEmpty()) return null
-    val u = formatUnit(qty, unit)
-    return if (u.isEmpty()) qty else "$qty $u"
+    val (q, u) = humanize(qty, unit)
+    val display = formatUnit(q, u)
+    return if (display.isEmpty()) q else "$q $display"
 }
 
 /**

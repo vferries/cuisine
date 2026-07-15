@@ -83,4 +83,27 @@ class FormatTest {
         assertEquals("planches à découper", pluralizeName(2, "planche à découper"))
         assertEquals("cuillères en bois", pluralizeName(2, "cuillère en bois"))
     }
+
+    @Test fun formatQty_humanizes_g_to_kg_from_1000() {
+        assertEquals("1.5 kg", formatQty("1500", "g"))
+        assertEquals("1 kg", formatQty("1000", "g"))
+        assertEquals("999 g", formatQty("999", "g"))
+    }
+
+    @Test fun formatQty_humanizes_ml_to_l_from_1000() {
+        assertEquals("1.2 l", formatQty("1200", "ml"))
+    }
+
+    @Test fun formatQty_never_converts_down() {
+        assertEquals("0.5 l", formatQty("0.5", "l"))
+        assertEquals("500 ml", formatQty("500", "ml"))
+    }
+
+    @Test fun formatQty_rounds_to_3_decimals() {
+        assertEquals("1.125 kg", formatQty("1125", "g"))
+    }
+
+    @Test fun formatQty_leaves_text_quantities() {
+        assertEquals("au goût g", formatQty("au goût", "g"))
+    }
 }
