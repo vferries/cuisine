@@ -174,7 +174,7 @@ Faits (tout le périmètre web) :
 
 Reste à faire :
 
-- [ ] **Skill d'import de recette** (en cours de design) — formaliser photo/texte → `.cook` validé.
+- [x] **Skill d'import de recette** — `.claude/skills/import-recette/SKILL.md` (invocable `/import-recette`). Photo/texte/URL → `.cook` validé et committé. Force une salve de questions avant transcription (source, cuisine non écrite, quantités illisibles, ingrédients orphelins), audit végé/sans gluten, zéro warning, un commit par recette, pas de push. Les règles de format restent dans CONVENTIONS.md (référencées, pas dupliquées). Spec : `docs/superpowers/specs/2026-07-15-import-recette-design.md`.
 
 Idées en réserve (discutées le 15/07/2026, à prioriser plus tard) :
 
