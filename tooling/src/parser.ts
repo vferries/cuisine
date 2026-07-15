@@ -187,6 +187,18 @@ function stripInlineLineComment(line: string): string {
   return idx >= 0 ? line.slice(0, idx) : line;
 }
 
+const BASE_UNITS: Record<string, { base: string; factor: number }> = {
+  kg: { base: "g", factor: 1000 },
+  l: { base: "ml", factor: 1000 },
+};
+
+function toBaseUnit(ing: Ingredient): Ingredient {
+  if (typeof ing.quantity !== "number" || !ing.unit) return ing;
+  const conv = BASE_UNITS[ing.unit];
+  if (!conv) return ing;
+  return { ...ing, quantity: ing.quantity * conv.factor, unit: conv.base };
+}
+
 export function parseCook(source: string): ParsedRecipe {
   const lines = stripBlockComments(source).split("\n");
   const metadata: Record<string, string> = {};
@@ -283,7 +295,7 @@ export function parseCook(source: string): ParsedRecipe {
     for (const step of sec.steps) {
       for (const tok of step.tokens) {
         if (tok.type === "ingredient") {
-          const ing = tok.ingredient;
+          const ing = toBaseUnit(tok.ingredient);
           const key = ing.name.toLowerCase();
           const prev = ingredientMap.get(key);
           if (!prev) {
