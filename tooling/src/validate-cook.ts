@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseCook } from "./parser.ts";
+import { isValidSaison } from "./saison.ts";
 
 export interface ValidationResult {
   errors: string[];
@@ -89,6 +90,16 @@ export function validateRecipe(
 
   if (!meta.source) {
     warnings.push(`metadata "source" absente — utile pour se rappeler d'où vient la recette`);
+  }
+
+  if (!meta.saison) {
+    warnings.push(
+      `metadata "saison" absente — bientôt requise ("toute l'année" ou "<mois>-<mois>")`,
+    );
+  } else if (!isValidSaison(meta.saison)) {
+    errors.push(
+      `metadata "saison" invalide: "${meta.saison}" (attendu: "toute l'année" ou "<mois>-<mois>" en minuscules, ex. octobre-mars)`,
+    );
   }
 
   for (const ing of parsed.ingredients) {

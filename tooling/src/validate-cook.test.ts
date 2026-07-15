@@ -184,3 +184,41 @@ describe("validateRecipe", () => {
     expect(result.errors.some((e) => e.includes("image"))).toBe(false);
   });
 });
+
+describe("validateRecipe — saison", () => {
+  const base = [
+    ">> title: Test",
+    ">> servings: 4",
+    ">> prep time: 10 min",
+    ">> cook time: 20 min",
+    ">> difficulty: facile",
+    ">> cuisine: française",
+    ">> course: plat",
+    ">> tags: test",
+    ">> source: test",
+    "",
+    "== Étapes ==",
+    "",
+    "Faire quelque chose.",
+    "",
+  ];
+
+  it("warning si saison absente (provisoire, avant backfill)", () => {
+    const { errors, warnings } = validateRecipe(base.join("\n"));
+    expect(errors).toEqual([]);
+    expect(warnings.some((w) => w.includes('"saison"'))).toBe(true);
+  });
+
+  it("erreur si saison malformée", () => {
+    const src = [">> saison: printemps", ...base].join("\n");
+    const { errors } = validateRecipe(src);
+    expect(errors.some((e) => e.includes('"saison" invalide'))).toBe(true);
+  });
+
+  it("valide avec une plage ou toute l'année", () => {
+    for (const v of ["octobre-mars", "toute l'année"]) {
+      const { errors } = validateRecipe([`>> saison: ${v}`, ...base].join("\n"));
+      expect(errors).toEqual([]);
+    }
+  });
+});

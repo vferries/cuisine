@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseCook } from "./parser.ts";
 import { lastCommitIso } from "./git-dates.ts";
+import { expandSaison } from "./saison.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "../..");
@@ -26,6 +27,7 @@ interface RecipeMeta {
   image?: string;
   ingredientNames: string[];
   updatedAt: string;
+  saisonMonths: number[];
 }
 
 export function parseMinutes(raw?: string): number {
@@ -116,6 +118,7 @@ async function main() {
         image: meta.image,
         ingredientNames: parsed.ingredients.map((i) => i.name),
         updatedAt,
+        saisonMonths: meta.saison ? expandSaison(meta.saison) : [],
       });
 
       console.log(`  ✓ ${slug}`);
