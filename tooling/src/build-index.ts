@@ -28,8 +28,11 @@ interface RecipeMeta {
   updatedAt: string;
 }
 
-function parseMinutes(raw?: string): number {
+export function parseMinutes(raw?: string): number {
   if (!raw) return 0;
+  // "1 h 10" → 70, "3 h" → 180, "20 min" → 20
+  const h = raw.match(/(\d+)\s*h(?:\s*(\d+))?/i);
+  if (h) return parseInt(h[1], 10) * 60 + (h[2] ? parseInt(h[2], 10) : 0);
   const m = raw.match(/(\d+)/);
   return m ? parseInt(m[1], 10) : 0;
 }
@@ -153,7 +156,9 @@ async function main() {
   if (errors > 0) process.exit(1);
 }
 
-main().catch((err) => {
-  console.error("❌ Build failed:", err);
-  process.exit(1);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error("❌ Build failed:", err);
+    process.exit(1);
+  });
+}
