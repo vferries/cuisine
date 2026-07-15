@@ -114,4 +114,12 @@ describe("parseCook — somme multi-unités", () => {
       ingredient: { name: "farine", quantity: 1, unit: "kg" },
     });
   });
+
+  it("somme toujours les duplications à unité identique non convertible", () => {
+    const src = "== Test ==\n\nÉcraser @ail{2%gousse} puis @ail{1%gousse}.\n";
+    const r = parseCook(src);
+    expect(r.ingredients).toEqual([
+      { name: "ail", quantity: 3, unit: "gousse" },
+    ]);
+  });
 });
