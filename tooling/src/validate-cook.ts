@@ -34,6 +34,9 @@ const ALLOWED_INGREDIENT_UNITS = new Set([
   "bouquet",
   "sachet",
   "gousse",
+  "bâton",
+  "botte",
+  "cm",
 ]);
 
 const ALLOWED_TIMER_UNITS = new Set(["sec", "min", "h"]);

@@ -30,6 +30,15 @@ describe("formatUnit", () => {
     expect(formatUnit(2, "pincée")).toBe("pincées");
   });
 
+  it("pluralise bâton et botte", () => {
+    expect(formatUnit(2, "bâton")).toBe("bâtons");
+    expect(formatUnit(2, "botte")).toBe("bottes");
+  });
+
+  it("ne pluralise pas cm", () => {
+    expect(formatUnit(4, "cm")).toBe("cm");
+  });
+
   it("ne pluralise pas les unités métriques invariantes", () => {
     expect(formatUnit(200, "g")).toBe("g");
     expect(formatUnit(2, "kg")).toBe("kg");

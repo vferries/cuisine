@@ -64,12 +64,12 @@ Syntaxe : `@nom{qté%unité}`.
 
 ### Unités
 
-Métriques : `g`, `kg`, `ml`, `l`.
+Métriques : `g`, `kg`, `ml`, `l`, `cm` (gingembre, citronnelle…, invariant).
 
 Française courantes :
 - `càc` — cuillère à café (5 ml), rendue `c. à c.` dans l'UI.
 - `càs` — cuillère à soupe (15 ml), rendue `c. à s.`.
-- `pincée`, `brin`, `bouquet`, `sachet`, `gousse` — quantité de comptage. **Toujours au singulier dans les `.cook`** ; l'UI pluralise automatiquement à qty > 1. Le validator rejette les pluriels.
+- `pincée`, `brin`, `bouquet`, `sachet`, `gousse`, `bâton`, `botte` — quantité de comptage. **Toujours au singulier dans les `.cook`** ; l'UI pluralise automatiquement à qty > 1. Le validator rejette les pluriels.
 
 ## Ustensiles
 

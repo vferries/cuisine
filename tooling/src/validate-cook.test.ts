@@ -108,6 +108,14 @@ describe("validateRecipe", () => {
     expect(result.warnings.some((w) => w.includes("unité"))).toBe(false);
   });
 
+  it("accepte bâton, botte et cm comme unités d'ingrédient", () => {
+    for (const unit of ["bâton", "botte", "cm"]) {
+      const source = withStep(`Ajoutez @chose{2%${unit}}.`);
+      const result = validateRecipe(source);
+      expect(result.warnings.some((w) => w.includes("unité"))).toBe(false);
+    }
+  });
+
   it("warn pour une unité d'ingrédient hors liste autorisée", () => {
     const source = withStep("Ajoutez @sucre{3%xyz}.");
     const result = validateRecipe(source);

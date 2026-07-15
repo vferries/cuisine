@@ -9,6 +9,8 @@ const PLURALIZABLE = new Set([
   "bouquet",
   "gousse",
   "pincée",
+  "bâton",
+  "botte",
 ]);
 
 export function formatUnit(
