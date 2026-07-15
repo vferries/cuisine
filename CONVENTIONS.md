@@ -26,6 +26,7 @@ Syntaxe : `>> clé: valeur`, une par ligne, tout en haut du fichier avant toute 
 | `difficulty` | enum | `facile` · `moyenne` · `difficile` |
 | `cuisine` | texte (féminin singulier) | `vietnamienne`, `italienne`, `française` |
 | `course` | enum | `entrée` · `plat` · `dessert` |
+| `saison` | plage | `toute l'année` · `octobre-mars` (mois français en minuscules, peut enjamber l'année, `mai-mai` = un seul mois) |
 
 ### Optionnelles
 

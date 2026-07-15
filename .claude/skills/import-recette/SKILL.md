@@ -19,7 +19,8 @@ Transforme une recette source (photo, texte collé, URL) en `recipes/<slug>.cook
    - `servings` absent ;
    - `difficulty` non indiquée → proposer une estimation à valider ;
    - passage illisible ou quantité manquante ;
-   - ingrédient listé mais absent des étapes → proposer un placement.
+   - ingrédient listé mais absent des étapes → proposer un placement ;
+   - La `saison:` (`toute l'année` ou plage `<mois>-<mois>`) quand elle n'est pas évidente d'après les ingrédients — proposer une valeur dans la salve, jamais la décider seul.
 
 3. **Transcrire.** Slug selon la règle de `CONVENTIONS.md`, appliquée mécaniquement, articles inclus (« Porc à la sauce arachide » → `porc-a-la-sauce-arachide`, pas `porc-sauce-arachide`). Unités converties vers la liste du validateur (`cl`→`ml`, virgule décimale→point), au singulier. Fractions en décimal (`½`→`0.5`) — le parser ne manipule que des nombres. Tout ingrédient des étapes se tague, accompagnement compris (`@riz blanc{}`). Ingrédient répété entre sous-préparations (marinade + sauce) : tagger chaque occurrence avec sa quantité, le parser somme — ne pas déplacer les quantités. Un timer nommé par durée explicite (`~mijotage{1%h}`). Sections : reprendre la structure du document si multi-composantes, sinon `Préparation`/`Cuisson`/`Dressage` ; conseils du chef → `Astuces`. Pas de `>> image:` sans photo du plat — une photo de page de livre n'est pas une photo du plat.
 

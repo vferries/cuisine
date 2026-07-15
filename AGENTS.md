@@ -172,6 +172,7 @@ Faits (tout le périmètre web) :
 - [x] Somme multi-unités (500 g + 1 kg → 1,5 kg) : parser normalise g/kg et ml/l en unité de base, `formatQty` web + Android humanisent dès 1000, y compris au scaling live. Spec : `docs/superpowers/specs/2026-07-15-somme-multi-unites-design.md`.
 - [x] Feuille d'impression dédiée (web) — bloc `@media print` qui masque chrome (nav, CTA, onglets, theme-toggle, timer-tray) et force tous les panels visibles indépendamment de l'onglet actif sur mobile. Hero réduit, fond blanc.
 - [x] Bouton "Au hasard" sur l'accueil (web + Android) — pioche dans la liste actuellement filtrée (recherche, chips et panneau avancé respectés). Web : dans `.count-row` à droite. Android : TextButton à gauche du toggle Filtres avancés. Lib `pickRandom` à RNG injectable côté web (`lib/random.ts`) et Android (`data/Random.kt`).
+- [x] Chip « De saison » (web + Android) : metadata `saison:` requise (`toute l'année` ou plage `octobre-mars`), expandée en `saisonMonths` par build-index, prédicat à mois injecté (`FilterContext.month` web, param `month` Kotlin), Room v2 destructif. Spec : `docs/superpowers/specs/2026-07-15-chip-de-saison-design.md`.
 
 Reste à faire :
 
@@ -180,7 +181,6 @@ Reste à faire :
 Idées en réserve (discutées le 15/07/2026, à prioriser plus tard) :
 
 - Recettes liées ("dans le même esprit") en bas de la vue recette — tags/cuisine partagés, tout est dans l'index.
-- Chip « De saison » — metadata `saison:` optionnelle + comparaison au mois courant.
 - Notification timer Android → deep-link vers l'étape du mode cuisson.
 - Widget Android (Au hasard / favoris) sur le cache Room existant.
 - Étiquettes saisonnières, planning hebdo, export PDF, image hero de meilleure qualité (idées historiques).
