@@ -47,6 +47,36 @@ describe("sortRecipes", () => {
     ]);
   });
 
+  it("'recent' départage les updatedAt identiques par slug", () => {
+    const t = "2026-04-28T07:05:10.000Z";
+    const x = { ...a, slug: "z-dernier", updatedAt: t };
+    const y = { ...b, slug: "a-premier", updatedAt: t };
+    const z = { ...c, slug: "m-milieu", updatedAt: t };
+    expect(sortRecipes([x, y, z], "recent")).toEqual([
+      "a-premier",
+      "m-milieu",
+      "z-dernier",
+    ]);
+    expect(sortRecipes([z, x, y], "recent")).toEqual([
+      "a-premier",
+      "m-milieu",
+      "z-dernier",
+    ]);
+  });
+
+  it("'duration' départage les totalTime identiques par slug", () => {
+    const x = { ...a, slug: "z-dernier", totalTime: 30 };
+    const y = { ...b, slug: "a-premier", totalTime: 30 };
+    expect(sortRecipes([x, y], "duration")).toEqual([
+      "a-premier",
+      "z-dernier",
+    ]);
+    expect(sortRecipes([y, x], "duration")).toEqual([
+      "a-premier",
+      "z-dernier",
+    ]);
+  });
+
   it("ne mute pas l'argument d'entrée", () => {
     const arr = [a, b, c];
     sortRecipes(arr, "alpha");

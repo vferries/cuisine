@@ -14,13 +14,23 @@ export function sortRecipes(
   const copy = [...recipes];
   switch (mode) {
     case "recent":
-      copy.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+      // Tie-break par slug : les recettes committées ensemble partagent
+      // la même date git, l'ordre doit rester déterministe.
+      copy.sort((a, b) =>
+        a.updatedAt === b.updatedAt
+          ? a.slug.localeCompare(b.slug)
+          : a.updatedAt < b.updatedAt
+            ? 1
+            : -1,
+      );
       break;
     case "alpha":
       copy.sort((a, b) => a.title.localeCompare(b.title, "fr"));
       break;
     case "duration":
-      copy.sort((a, b) => a.totalTime - b.totalTime);
+      copy.sort(
+        (a, b) => a.totalTime - b.totalTime || a.slug.localeCompare(b.slug),
+      );
       break;
   }
   return copy.map((r) => r.slug);
