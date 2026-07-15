@@ -174,7 +174,17 @@ Faits (tout le périmètre web) :
 
 Reste à faire :
 
-_Backlog vide._ Toutes les features prévues sont livrées. Idées qui pourraient venir : étiquettes saisonnières, planning hebdo, export PDF, image hero de meilleure qualité.
+- [ ] **Skill d'import de recette** (en cours de design) — formaliser photo/texte → `.cook` validé.
+
+Idées en réserve (discutées le 15/07/2026, à prioriser plus tard) :
+
+- Recettes liées ("dans le même esprit") en bas de la vue recette — tags/cuisine partagés, tout est dans l'index.
+- Chip « De saison » — metadata `saison:` optionnelle + comparaison au mois courant.
+- Somme multi-unités dans le parser (500 g + 1 kg) — conversions g/kg et ml/l.
+- Notification timer Android → deep-link vers l'étape du mode cuisson.
+- Widget Android (Au hasard / favoris) sur le cache Room existant.
+- Journal de cuisine par recette ("faite le X, doubler le gingembre") — local, question ouverte : pas de sync entre appareils.
+- Étiquettes saisonnières, planning hebdo, export PDF, image hero de meilleure qualité (idées historiques).
 
 Pas retenu :
 
