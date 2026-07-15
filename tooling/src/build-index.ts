@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseCook } from "./parser.ts";
+import { lastCommitIso } from "./git-dates.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "../..");
@@ -61,7 +62,15 @@ async function main() {
     const slug = file.replace(/\.cook$/, "");
     const filePath = path.join(RECIPES_DIR, file);
     const source = await fs.readFile(filePath, "utf-8");
-    const stat = await fs.stat(filePath);
+
+    // Date du dernier commit : stable quel que soit l'environnement de build.
+    // Les mtimes ne survivent pas au checkout CI (tous identiques → ordre
+    // "récent" arbitraire). Fallback mtime pour un fichier pas encore commité.
+    let updatedAt = lastCommitIso(filePath);
+    if (!updatedAt) {
+      console.warn(`  ⚠ ${file}: pas de date git — fallback sur le mtime`);
+      updatedAt = (await fs.stat(filePath)).mtime.toISOString();
+    }
 
     try {
       const parsed = parseCook(source);
@@ -78,7 +87,7 @@ async function main() {
 
       const recipe = {
         slug,
-        updatedAt: stat.mtime.toISOString(),
+        updatedAt,
         ...parsed,
       };
 
@@ -103,7 +112,7 @@ async function main() {
         tags: parseTags(meta.tags),
         image: meta.image,
         ingredientNames: parsed.ingredients.map((i) => i.name),
-        updatedAt: stat.mtime.toISOString(),
+        updatedAt,
       });
 
       console.log(`  ✓ ${slug}`);
