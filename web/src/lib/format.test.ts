@@ -89,3 +89,31 @@ describe("formatQty", () => {
     expect(formatQty(6, "càc")).toBe("6 c. à c.");
   });
 });
+
+describe("formatQty — humanisation g→kg et ml→l", () => {
+  it("bascule en kg dès 1000 g", () => {
+    expect(formatQty(1500, "g")).toBe("1.5 kg");
+    expect(formatQty(1000, "g")).toBe("1 kg");
+  });
+
+  it("reste en g sous 1000", () => {
+    expect(formatQty(999, "g")).toBe("999 g");
+  });
+
+  it("bascule en l dès 1000 ml", () => {
+    expect(formatQty(1200, "ml")).toBe("1.2 l");
+  });
+
+  it("ne convertit jamais vers le bas", () => {
+    expect(formatQty(0.5, "l")).toBe("0.5 l");
+    expect(formatQty(500, "ml")).toBe("500 ml");
+  });
+
+  it("arrondit à 3 décimales max", () => {
+    expect(formatQty(1125, "g")).toBe("1.125 kg");
+  });
+
+  it("laisse les quantités texte inchangées", () => {
+    expect(formatQty("au goût", "g")).toBe("au goût g");
+  });
+});
