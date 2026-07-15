@@ -8,6 +8,7 @@ const validRecipe = `>> title: Recette test
 >> difficulty: facile
 >> cuisine: française
 >> course: plat
+>> saison: toute l'année
 
 Une étape.`;
 
@@ -19,7 +20,7 @@ describe("validateRecipe", () => {
 
   it("signale chaque metadata requise manquante", () => {
     const result = validateRecipe("");
-    for (const key of ["title", "servings", "prep time", "cook time", "difficulty", "cuisine", "course"]) {
+    for (const key of ["title", "servings", "prep time", "cook time", "difficulty", "cuisine", "course", "saison"]) {
       expect(result.errors.some((e) => e.includes(key))).toBe(true);
     }
   });
@@ -203,10 +204,9 @@ describe("validateRecipe — saison", () => {
     "",
   ];
 
-  it("warning si saison absente (provisoire, avant backfill)", () => {
-    const { errors, warnings } = validateRecipe(base.join("\n"));
-    expect(errors).toEqual([]);
-    expect(warnings.some((w) => w.includes('"saison"'))).toBe(true);
+  it("erreur si saison absente", () => {
+    const { errors } = validateRecipe(base.join("\n"));
+    expect(errors.some((e) => e.includes('"saison" manquante'))).toBe(true);
   });
 
   it("erreur si saison malformée", () => {

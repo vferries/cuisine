@@ -17,6 +17,7 @@ const REQUIRED_METADATA = [
   "difficulty",
   "cuisine",
   "course",
+  "saison",
 ] as const;
 
 const ALLOWED_DIFFICULTIES = new Set(["facile", "moyenne", "difficile"]);
@@ -92,11 +93,7 @@ export function validateRecipe(
     warnings.push(`metadata "source" absente — utile pour se rappeler d'où vient la recette`);
   }
 
-  if (!meta.saison) {
-    warnings.push(
-      `metadata "saison" absente — bientôt requise ("toute l'année" ou "<mois>-<mois>")`,
-    );
-  } else if (!isValidSaison(meta.saison)) {
+  if (meta.saison && !isValidSaison(meta.saison)) {
     errors.push(
       `metadata "saison" invalide: "${meta.saison}" (attendu: "toute l'année" ou "<mois>-<mois>" en minuscules, ex. octobre-mars)`,
     );
