@@ -183,13 +183,13 @@ Idées en réserve (discutées le 15/07/2026, à prioriser plus tard) :
 - Somme multi-unités dans le parser (500 g + 1 kg) — conversions g/kg et ml/l.
 - Notification timer Android → deep-link vers l'étape du mode cuisson.
 - Widget Android (Au hasard / favoris) sur le cache Room existant.
-- Journal de cuisine par recette ("faite le X, doubler le gingembre") — local, question ouverte : pas de sync entre appareils.
 - Étiquettes saisonnières, planning hebdo, export PDF, image hero de meilleure qualité (idées historiques).
 
 Pas retenu :
 
 - **Liste de courses** agrégée multi-recettes — la checklist par recette couvre le besoin réel ; ajouter un écran dédié alourdirait l'app pour un usage trop marginal.
 - **PWA offline** — l'app Android native couvre déjà le besoin offline en mobilité ; pas de cas d'usage desktop sans réseau.
+- **Journal de cuisine local** (notes par recette côté app) — l'owner préfère centraliser les notes dans les `.cook` eux-mêmes (section Astuces), qui restent la source de vérité unique et synchronisée partout.
 
 ### Setup release Android (one-time)
 
