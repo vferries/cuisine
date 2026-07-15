@@ -11,7 +11,7 @@ interface RecipeDao {
     @Upsert
     suspend fun upsertAll(entities: List<RecipeMetaEntity>)
 
-    @Query("SELECT * FROM recipe_meta ORDER BY updatedAt DESC")
+    @Query("SELECT * FROM recipe_meta ORDER BY updatedAt DESC, slug ASC")
     suspend fun allMeta(): List<RecipeMetaEntity>
 
     @Upsert

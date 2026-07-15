@@ -11,11 +11,17 @@ enum class SortMode(val label: String) {
 
 fun sortRecipes(recipes: List<RecipeMeta>, mode: SortMode): List<String> {
     return when (mode) {
-        SortMode.RECENT -> recipes.sortedByDescending { it.updatedAt }
+        // Tie-break par slug : les recettes committées ensemble partagent
+        // la même date git, l'ordre doit rester déterministe.
+        SortMode.RECENT -> recipes.sortedWith(
+            compareByDescending<RecipeMeta> { it.updatedAt }.thenBy { it.slug },
+        )
         SortMode.ALPHA -> {
             val collator = Collator.getInstance(Locale.FRENCH)
             recipes.sortedWith(compareBy(collator) { it.title })
         }
-        SortMode.DURATION -> recipes.sortedBy { it.totalTime }
+        SortMode.DURATION -> recipes.sortedWith(
+            compareBy<RecipeMeta> { it.totalTime }.thenBy { it.slug },
+        )
     }.map { it.slug }
 }
