@@ -5,11 +5,13 @@ export interface ChipFilterDoc {
   difficulty?: string;
   tags: string[];
   totalTime: number;
+  saisonMonths?: number[];
 }
 
 export type ChipKey =
   | "all"
   | "rapide"
+  | "saison"
   | "vege"
   | "asiatique"
   | "francais"
@@ -18,10 +20,11 @@ export type ChipKey =
 
 export interface FilterContext {
   favorites?: string[];
+  month?: number;
 }
 
 const CHIP_PREDICATES: Record<
-  Exclude<ChipKey, "all" | "favoris">,
+  Exclude<ChipKey, "all" | "favoris" | "saison">,
   (r: ChipFilterDoc) => boolean
 > = {
   rapide: (r) => r.totalTime <= 30,
@@ -40,6 +43,13 @@ export function filterByChip(
   if (chip === "favoris") {
     const favs = new Set(ctx.favorites ?? []);
     return recipes.filter((r) => favs.has(r.slug)).map((r) => r.slug);
+  }
+  if (chip === "saison") {
+    const { month } = ctx;
+    if (month === undefined) return recipes.map((r) => r.slug);
+    return recipes
+      .filter((r) => (r.saisonMonths ?? []).includes(month))
+      .map((r) => r.slug);
   }
   const predicate = CHIP_PREDICATES[chip];
   return recipes.filter(predicate).map((r) => r.slug);

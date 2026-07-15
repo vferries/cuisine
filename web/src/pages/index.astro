@@ -48,6 +48,7 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
       <button class="chip is-active" type="button" data-chip="all">Toutes</button>
       <button class="chip" type="button" data-chip="favoris">Favoris</button>
       <button class="chip" type="button" data-chip="rapide">Rapide</button>
+      <button class="chip" type="button" data-chip="saison">De saison</button>
       <button class="chip" type="button" data-chip="vege">Végé</button>
       <button class="chip" type="button" data-chip="asiatique">Asiatique</button>
       <button class="chip" type="button" data-chip="francais">Français</button>
@@ -286,7 +287,10 @@ const thumbClass = (c: string) => cuisineToThumb[c?.toLowerCase()] ?? "is-gray";
     function render() {
       const favorites = readFavorites(localStorage);
       const allowedByChip = new Set(
-        filterByChip(recipes, activeChip, { favorites }),
+        filterByChip(recipes, activeChip, {
+          favorites,
+          month: new Date().getMonth() + 1,
+        }),
       );
       const allowedByCourse = new Set(filterByCourse(recipes, activeCourse));
       const allowedByDifficulty = new Set(

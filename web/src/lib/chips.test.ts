@@ -147,3 +147,29 @@ describe("filterBySansGluten", () => {
     expect(filterBySansGluten([porc, flan], true)).toEqual(["flan"]);
   });
 });
+
+describe("filterByChip — saison", () => {
+  const doc = (slug: string, saisonMonths: number[]): ChipFilterDoc => ({
+    slug,
+    cuisine: "",
+    tags: [],
+    totalTime: 0,
+    saisonMonths,
+  });
+
+  it("garde les recettes dont la plage contient le mois injecté", () => {
+    const recipes = [doc("ete", [6, 7, 8]), doc("hiver", [12, 1, 2])];
+    expect(filterByChip(recipes, "saison", { month: 7 })).toEqual(["ete"]);
+    expect(filterByChip(recipes, "saison", { month: 1 })).toEqual(["hiver"]);
+  });
+
+  it("exclut une recette sans saisonMonths quand un mois est fourni", () => {
+    const bare: ChipFilterDoc = { slug: "x", cuisine: "", tags: [], totalTime: 0 };
+    expect(filterByChip([bare], "saison", { month: 7 })).toEqual([]);
+  });
+
+  it("sans mois fourni, ne filtre rien", () => {
+    const recipes = [doc("ete", [6, 7, 8])];
+    expect(filterByChip(recipes, "saison", {})).toEqual(["ete"]);
+  });
+});
