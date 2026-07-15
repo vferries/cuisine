@@ -26,7 +26,7 @@ Deux workflows GitHub Actions dans `.github/workflows/` :
 Étapes de build détaillées :
 
 1. `tooling/src/validate-cook.ts` — valide chaque `.cook`. Errors : metadata requises, difficulty enum, servings entier positif, aucune étape parsée, image référencée absente. Warnings : tags/source absents, unités d'ingrédient/timer hors liste autorisée. Exit 1 sur error.
-2. `tooling/src/build-index.ts` — parse chaque `.cook`, génère `web/src/generated/index.json` (métadonnées + tokens de recherche) + `web/src/generated/recipes/{slug}.json` (AST complet).
+2. `tooling/src/build-index.ts` — parse chaque `.cook`, génère `web/src/generated/index.json` (métadonnées + tokens de recherche) + `web/src/generated/recipes/{slug}.json` (AST complet). `updatedAt` = date du dernier commit git du fichier (fallback mtime si jamais commité) — les mtimes ne survivent pas au checkout CI, d'où `fetch-depth: 0` dans les workflows. Les tris « récent »/« durée » tie-breakent par slug (web `sort.ts`, Android `Sort.kt` + query Room) pour rester déterministes à dates égales.
 3. `tooling/src/build-images.ts` — via `sharp`, convertit `recipes/images/*.{png,jpg,jpeg,webp}` en `web/public/images/{slug}.webp` (1024×768) + `{slug}.thumb.webp` (320×240), fit cover + q82.
 4. `astro build` produit `web/dist/`.
 5. `actions/deploy-pages@v4` publie sur GitHub Pages.
