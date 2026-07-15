@@ -133,7 +133,7 @@ Click sur un `<li>` d'ingrédient toggle `.is-checked` (strike-through + dim 45%
 - **CI + deploy** : workflows GitHub Actions (`ci.yml`, `deploy.yml`). Deploy sur push main vers `/cuisine/` (piloté par `DEPLOY_BASE`).
 - **Dark mode** : auto via `prefers-color-scheme`, override manuel par bouton (`data-theme` persisté en localStorage, script inline dans `<head>` anti-flash).
 - Design tokens + composants CSS dans `web/src/styles/global.css`.
-- Une recette de référence : `recipes/porc-bigorre-caramel.cook` + image `recipes/images/porc-bigorre-caramel.png`.
+- 15 recettes dans `recipes/` (importées via /import-recette).
 
 ### Ce qui ne fonctionne pas encore
 
@@ -144,7 +144,7 @@ Click sur un `<li>` d'ingrédient toggle `.is-checked` (strike-through + dim 45%
 ### Limites connues du parser
 
 - Pas de shopping list ni scaling natif — fait à la main côté UI.
-- La somme des quantités dupliquées ne marche que si l'unité est identique.
+- La somme des quantités dupliquées couvre l'unité identique + les familles g/kg et ml/l (normalisées en unité de base au parse, humanisées kg/l à l'affichage dès 1000 — web `format.ts`, Android `Format.kt`).
 
 ## Roadmap
 
@@ -169,6 +169,7 @@ Faits (tout le périmètre web) :
 - [x] Champ `course` (entrée/plat/dessert) requis dans les metadata, validé en enum.
 - [x] Panneau de recherche avancée (web + Android) : portée tout/ingrédients, course, difficulté, sans gluten, tri récent/alpha/durée. Côté Android, `Course`/`Difficulty`/`SortMode`/`SearchScope` enums dans `data/`, panneau Compose avec FilterChips groupés, état `rememberSaveable`.
 - [x] Affichage du champ `source` (web + Android) — rendu en italique préfixé par "D'après". Côté web, sous le `<h1>` dans le header (Fraunces italique). Côté Android, sous l'image hero (bodyMedium italique), le titre étant pris par la TopAppBar.
+- [x] Somme multi-unités (500 g + 1 kg → 1,5 kg) : parser normalise g/kg et ml/l en unité de base, `formatQty` web + Android humanisent dès 1000, y compris au scaling live. Spec : `docs/superpowers/specs/2026-07-15-somme-multi-unites-design.md`.
 - [x] Feuille d'impression dédiée (web) — bloc `@media print` qui masque chrome (nav, CTA, onglets, theme-toggle, timer-tray) et force tous les panels visibles indépendamment de l'onglet actif sur mobile. Hero réduit, fond blanc.
 - [x] Bouton "Au hasard" sur l'accueil (web + Android) — pioche dans la liste actuellement filtrée (recherche, chips et panneau avancé respectés). Web : dans `.count-row` à droite. Android : TextButton à gauche du toggle Filtres avancés. Lib `pickRandom` à RNG injectable côté web (`lib/random.ts`) et Android (`data/Random.kt`).
 
@@ -180,7 +181,6 @@ Idées en réserve (discutées le 15/07/2026, à prioriser plus tard) :
 
 - Recettes liées ("dans le même esprit") en bas de la vue recette — tags/cuisine partagés, tout est dans l'index.
 - Chip « De saison » — metadata `saison:` optionnelle + comparaison au mois courant.
-- Somme multi-unités dans le parser (500 g + 1 kg) — conversions g/kg et ml/l.
 - Notification timer Android → deep-link vers l'étape du mode cuisson.
 - Widget Android (Au hasard / favoris) sur le cache Room existant.
 - Étiquettes saisonnières, planning hebdo, export PDF, image hero de meilleure qualité (idées historiques).
