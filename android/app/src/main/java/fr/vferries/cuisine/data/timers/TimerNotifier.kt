@@ -2,11 +2,14 @@ package fr.vferries.cuisine.data.timers
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.media.AudioAttributes
 import android.net.Uri
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import fr.vferries.cuisine.MainActivity
 import fr.vferries.cuisine.R
 
 /**
@@ -26,15 +29,35 @@ class TimerNotifier(context: Context) {
 
     fun notifyExpired(id: String, name: String) {
         val title = if (name.isNotBlank()) "$name terminé" else "Timer terminé"
-        val notif = NotificationCompat.Builder(appContext, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(appContext, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_timer_notification)
             .setContentTitle(title)
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .build()
-        nm.notify(id.hashCode(), notif)
-        Log.d(TAG, "notifyExpired posted id=$id name='$name'")
+        val target = parseTimerId(id)
+        if (target != null) {
+            builder.setContentIntent(deepLinkIntent(id, target))
+        } else {
+            Log.w(TAG, "notifyExpired: id non parsable '$id' — notif sans deep-link")
+        }
+        nm.notify(id.hashCode(), builder.build())
+        Log.d(TAG, "notifyExpired posted id=$id name='$name' deepLink=${target != null}")
+    }
+
+    /** Tap sur la notif → MainActivity avec la cible ; un PendingIntent par timer. */
+    private fun deepLinkIntent(id: String, target: TimerTarget): PendingIntent {
+        val intent = Intent(appContext, MainActivity::class.java).apply {
+            putExtra(EXTRA_DEEPLINK_SLUG, target.slug)
+            putExtra(EXTRA_DEEPLINK_SECTION, target.sectionIdx)
+            putExtra(EXTRA_DEEPLINK_STEP, target.stepIdx)
+        }
+        return PendingIntent.getActivity(
+            appContext,
+            id.hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
     }
 
     private fun ensureChannel() {
@@ -67,6 +90,9 @@ class TimerNotifier(context: Context) {
 
     companion object {
         const val CHANNEL_ID = "timers"
+        const val EXTRA_DEEPLINK_SLUG = "deeplink_slug"
+        const val EXTRA_DEEPLINK_SECTION = "deeplink_section"
+        const val EXTRA_DEEPLINK_STEP = "deeplink_step"
         private const val TAG = "Cuisine.Timers"
     }
 }
