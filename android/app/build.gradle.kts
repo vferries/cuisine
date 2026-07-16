@@ -56,6 +56,13 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
+            all { test ->
+                // ComponentActivity vient de ui-test-manifest (debugImplementation) :
+                // les tests Compose ne peuvent pas se lancer sur le variant release.
+                if (test.name == "testReleaseUnitTest") {
+                    test.exclude("**/ui/HomeScreenTest*", "**/ui/RecipeScreenTest*")
+                }
+            }
         }
     }
 }
