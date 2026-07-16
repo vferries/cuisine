@@ -1,5 +1,6 @@
 package fr.vferries.cuisine.data
 
+import android.util.Log
 import fr.vferries.cuisine.data.cache.RecipeDao
 import fr.vferries.cuisine.data.cache.RecipeEntity
 import fr.vferries.cuisine.data.cache.toDomain
@@ -26,6 +27,7 @@ class CachedRecipeRepository(
             dao.upsertAll(fresh.map { it.toEntity() })
             fresh
         } catch (e: Exception) {
+            Log.w(TAG, "listRecipes: réseau KO, fallback cache", e)
             dao.allMeta().map { it.toDomain() }
         }
     }
@@ -42,9 +44,14 @@ class CachedRecipeRepository(
             )
             fresh
         } catch (e: Exception) {
+            Log.w(TAG, "getRecipe($slug): réseau KO, fallback cache", e)
             val cached = dao.recipeBySlug(slug)
                 ?: throw e
             json.decodeFromString<Recipe>(cached.json)
         }
+    }
+
+    private companion object {
+        const val TAG = "Cuisine.Data"
     }
 }
