@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/home/vincent/.claude/plugins/cache/claude-plugins-official/superpowers/6.1.1/skills/subagent-driven-development/scripts/task-brief *)",
+      "Bash(/home/vincent/.claude/plugins/cache/claude-plugins-official/superpowers/6.1.1/skills/subagent-driven-development/scripts/review-package *)",
+      "Bash(curl -s https://vferries.github.io/cuisine/*)",
+      "Bash(curl -s https://api.github.com/repos/vferries/cuisine/*)"
+    ]
+  }
+}
