@@ -46,7 +46,8 @@ class MainActivity : ComponentActivity() {
         val themePrefs = ThemePreferences.from(this)
         TimerRegistry.init(applicationContext)
         ensureNotificationPermission()
-        deepLink.value = timerDeepLinkFrom(intent)
+        // Recréation (rotation) : ne pas rejouer le deep-link de l'intent de lancement.
+        if (savedInstanceState == null) deepLink.value = timerDeepLinkFrom(intent)
         setContent {
             var mode by remember { mutableStateOf(themePrefs.get()) }
             CuisineTheme(mode = mode) {
@@ -71,6 +72,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         deepLink.value = timerDeepLinkFrom(intent)
     }
 
