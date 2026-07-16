@@ -1,6 +1,7 @@
 package fr.vferries.cuisine
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -20,7 +21,9 @@ import androidx.core.content.ContextCompat
 import fr.vferries.cuisine.data.CachedRecipeRepository
 import fr.vferries.cuisine.data.HttpRecipeRepository
 import fr.vferries.cuisine.data.cache.CuisineDatabase
+import fr.vferries.cuisine.data.timers.TimerDeepLink
 import fr.vferries.cuisine.data.timers.TimerRegistry
+import fr.vferries.cuisine.data.timers.timerDeepLinkFrom
 import fr.vferries.cuisine.ui.CuisineNavHost
 import fr.vferries.cuisine.ui.TimerTrayOverlay
 import fr.vferries.cuisine.ui.theme.CuisineTheme
@@ -32,6 +35,9 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission(),
     ) { /* user choice — no-op : notifs muettes si refusé */ }
 
+    // App fermée : onCreate lit l'intent ; app ouverte (singleTop) : onNewIntent.
+    private val deepLink = mutableStateOf<TimerDeepLink?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -40,6 +46,7 @@ class MainActivity : ComponentActivity() {
         val themePrefs = ThemePreferences.from(this)
         TimerRegistry.init(applicationContext)
         ensureNotificationPermission()
+        deepLink.value = timerDeepLinkFrom(intent)
         setContent {
             var mode by remember { mutableStateOf(themePrefs.get()) }
             CuisineTheme(mode = mode) {
@@ -52,12 +59,19 @@ class MainActivity : ComponentActivity() {
                                 mode = it
                                 themePrefs.set(it)
                             },
+                            deepLink = deepLink.value,
+                            onDeepLinkConsumed = { deepLink.value = null },
                         )
                     }
                     TimerTrayOverlay()
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        deepLink.value = timerDeepLinkFrom(intent)
     }
 
     private fun ensureNotificationPermission() {

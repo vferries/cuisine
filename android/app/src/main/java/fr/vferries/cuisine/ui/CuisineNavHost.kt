@@ -1,6 +1,7 @@
 package fr.vferries.cuisine.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModelProvider
@@ -11,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import fr.vferries.cuisine.data.RecipeRepository
+import fr.vferries.cuisine.data.timers.TimerDeepLink
 import fr.vferries.cuisine.ui.theme.ThemeMode
 
 @Composable
@@ -18,8 +20,22 @@ fun CuisineNavHost(
     repository: RecipeRepository,
     themeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
+    deepLink: TimerDeepLink? = null,
+    onDeepLinkConsumed: () -> Unit = {},
 ) {
     val nav = rememberNavController()
+    LaunchedEffect(deepLink) {
+        if (deepLink == null) return@LaunchedEffect
+        // Pile Home → Recette → Cuisson, quel que soit l'écran courant.
+        nav.navigate("recipe/${deepLink.slug}") {
+            popUpTo("home")
+            launchSingleTop = true
+        }
+        nav.navigate(
+            "cuisson/${deepLink.slug}?section=${deepLink.sectionIdx}&step=${deepLink.stepIdx}",
+        )
+        onDeepLinkConsumed()
+    }
     NavHost(navController = nav, startDestination = "home") {
         composable("home") {
             val vm: HomeViewModel = viewModel(
