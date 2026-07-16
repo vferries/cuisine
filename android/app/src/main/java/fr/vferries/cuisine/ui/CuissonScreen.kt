@@ -1,5 +1,6 @@
 package fr.vferries.cuisine.ui
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,8 +23,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -42,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import fr.vferries.cuisine.data.FlatStep
 import fr.vferries.cuisine.data.Recipe
 import fr.vferries.cuisine.data.StepToken
+import fr.vferries.cuisine.data.flatIndexOf
 import fr.vferries.cuisine.data.flattenSteps
 import fr.vferries.cuisine.data.formatUnit
 import fr.vferries.cuisine.data.timers.RunningTimer
@@ -53,6 +57,8 @@ import fr.vferries.cuisine.data.timers.timerDurationSeconds
 fun CuissonScreen(
     state: RecipeState,
     onExit: () -> Unit,
+    targetSection: Int = -1,
+    targetStep: Int = -1,
 ) {
     val steps = (state as? RecipeState.Success)
         ?.let { flattenSteps(it.recipe.sections) }
@@ -61,6 +67,20 @@ fun CuissonScreen(
         (state as? RecipeState.Success)?.recipe?.slug ?: "loading",
     ) { mutableIntStateOf(0) }
     val clamped = if (steps.isEmpty()) 0 else index.coerceIn(0, steps.size - 1)
+
+    var targetApplied by rememberSaveable(
+        (state as? RecipeState.Success)?.recipe?.slug ?: "loading",
+    ) { mutableStateOf(false) }
+    LaunchedEffect(steps.isNotEmpty()) {
+        if (targetApplied || targetSection < 0 || steps.isEmpty()) return@LaunchedEffect
+        val i = flatIndexOf(steps, targetSection, targetStep)
+        if (i >= 0) {
+            index = i
+        } else {
+            Log.w("Cuisine.Timers", "étape cible ($targetSection,$targetStep) introuvable — étape 0")
+        }
+        targetApplied = true
+    }
 
     Scaffold(
         topBar = {

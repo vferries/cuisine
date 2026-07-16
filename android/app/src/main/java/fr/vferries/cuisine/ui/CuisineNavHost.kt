@@ -56,8 +56,12 @@ fun CuisineNavHost(
             )
         }
         composable(
-            route = "cuisson/{slug}",
-            arguments = listOf(navArgument("slug") { type = NavType.StringType }),
+            route = "cuisson/{slug}?section={section}&step={step}",
+            arguments = listOf(
+                navArgument("slug") { type = NavType.StringType },
+                navArgument("section") { type = NavType.IntType; defaultValue = -1 },
+                navArgument("step") { type = NavType.IntType; defaultValue = -1 },
+            ),
         ) { entry ->
             val slug = entry.arguments?.getString("slug").orEmpty()
             val vm: RecipeViewModel = viewModel(
@@ -65,7 +69,12 @@ fun CuisineNavHost(
                 factory = factoryOf { RecipeViewModel(repository, slug) },
             )
             val state by vm.state.collectAsState()
-            CuissonScreen(state = state, onExit = { nav.popBackStack() })
+            CuissonScreen(
+                state = state,
+                onExit = { nav.popBackStack() },
+                targetSection = entry.arguments?.getInt("section") ?: -1,
+                targetStep = entry.arguments?.getInt("step") ?: -1,
+            )
         }
     }
 }
