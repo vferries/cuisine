@@ -104,6 +104,8 @@ Permissions : `SCHEDULE_EXACT_ALARM` (déclarée au manifest, non auto-grantée 
 
 Pas de **foreground service** : pas besoin, AlarmManager est conçu pour ce cas. Le service foreground a été écarté comme overkill.
 
+**Deep-link de notification** — tap sur l'expiration ouvre le mode cuisson de la recette à l'étape du timer (pile Home → Recette → Cuisson). L'id du timer (`slug:sectionIdx:stepIdx:tokIdx`) est parsé via `parseTimerId`, les extras décryptés par `timerDeepLinkFrom`, la route ciblée est `cuisson/{slug}?section&step`. `MainActivity` est configurée `singleTop` : app déjà au premier-plan → `onNewIntent` traite le deep-link sans dupliquer la back-stack.
+
 ### Checklist ingrédients
 
 Click sur un `<li>` d'ingrédient toggle `.is-checked` (strike-through + dim 45%, check pill corail). Persisté par recette (`localStorage["ingredients-checked:{slug}"]`). Bouton "Tout décocher" dans le panel-header. Indépendant du changement de portions (décoche pas automatiquement).
@@ -181,7 +183,6 @@ Reste à faire :
 Idées en réserve (discutées le 15/07/2026, à prioriser plus tard) :
 
 - Recettes liées ("dans le même esprit") en bas de la vue recette — tags/cuisine partagés, tout est dans l'index.
-- Notification timer Android → deep-link vers l'étape du mode cuisson.
 - Widget Android (Au hasard / favoris) sur le cache Room existant.
 - Étiquettes saisonnières, planning hebdo, export PDF, image hero de meilleure qualité (idées historiques).
 
